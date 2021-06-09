@@ -1,5 +1,5 @@
 #!/bin/sh
 ln -sf $(pwd)/slave_1.0.0 ~/.factorio/mods
-if [ ! -f ./fac ]; then # only link to factorio server if it is downloaded
+if [ -f ./factorio ]; then # only link to factorio server if it is downloaded
 	ln -sf $(pwd)/slave_1.0.0 $(pwd)/factorio/mods
 fi

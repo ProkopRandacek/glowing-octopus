@@ -20,7 +20,9 @@ func main() {
 		return
 	}
 
-	bot.walkTo(20, 20)
+	//bot.walkTo(20, 20)
+	str, err := bot.getWorld()
 
-	fmt.Println(bot)
+	fmt.Println(str)
+	fmt.Printf("err: %s\n", err.Error())
 }
