@@ -1,0 +1,13 @@
+{
+    "name": "slave",
+    "version": "1.0.0",
+    "factorio_version": "1.1",
+    "title": "Slave",
+    "author": "Proicop",
+    "contact": "prokop@randacek.dev",
+    "homepage": "https://github.com/prokoprandacek",
+    "description": "Slaves to the master python code",
+    "dependencies": [
+        "base >= 1.1.0"
+    ]
+}
