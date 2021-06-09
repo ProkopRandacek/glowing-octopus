@@ -38,7 +38,7 @@ local function write_world()
 	game.print("done")
 end
 
-local function getdir(x, y)
+local function get_dir(x, y)
 	local delta_x = x - p.position.x
 	local delta_y = y - p.position.y
 
@@ -63,17 +63,17 @@ local function getdir(x, y)
 	end
 end
 
-commands.add_command("walkto", nil, function(command) end)
+commands.add_command("walkto", nil, function(command)
+	args = game.json_to_table(command.parameter)
+	if args == nil then -- check that the argument is valid
+		game.print("wrong input: " .. command.parameter)
+	end
+	walking_state = get_dir(args.x, args.y) -- this sets the walking state to true
+	walking_to = args
+end)
 
 commands.add_command("writeworld", nil, function(command)
 	write_world()
-end)
-
-script.on_load(function()
-end)
-
-script.on_event(defines.events.on_script_path_request_finished, function(event) 
-	p.print(game.table_to_json(event))
 end)
 
 script.on_event(defines.events.on_tick, function(event)
@@ -82,6 +82,7 @@ script.on_event(defines.events.on_tick, function(event)
 
 	if walking_state.walking then
 		p.walking_state = walking_state
-		walking_state = getdir(walking_to.x, walking_to.y)
+		walking_state = get_dir(walking_to.x, walking_to.y)
+		if not walking_state.walking then game.print("walking done") end
 	end
 end)
