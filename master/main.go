@@ -20,5 +20,7 @@ func main() {
 		return
 	}
 
+	bot.walkTo(20, 20)
+
 	fmt.Println(bot)
 }
