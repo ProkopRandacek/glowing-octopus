@@ -14,24 +14,16 @@ end
 
 local function write_world()
 	local surface = game.get_surface("nauvis")
-	local result = ""
 
 	-- == water == --
-	--local tiles = surface.find_tiles_filtered{name="water"}
-	local tiles = surface.find_tiles_filtered{}
+	local tiles = surface.find_tiles_filtered{name = {"water", "deepwater"}}
 	local output = {}
-	existingEntities = {}
 	for i, t in pairs(tiles) do
-		if not has_value(existingEntities, t.name) then
-			table.insert(existingEntities, t.name)
-		end
-		--table.insert(output, { t.position.x, t.position.y })
+		output[i] = { t.position.x, t.position.y }
 	end
-	--game.write_file("water" .. ".json", game.table_to_json(output))
-	game.print("found resources: " .. game.table_to_json(existingEntities))
-	--result = ""
+	game.write_file("water.json", game.table_to_json(output))
 
-	-- == ores == --
+	-- == resources == --
 	local entities = surface.find_entities_filtered{type="resource"}
 	output = {}
 	existingEntities = {}
@@ -42,16 +34,8 @@ local function write_world()
 		end
 		table.insert(output[e.name], {e.position.x, e.position.y, e.amount})
 	end
-	game.write_file("resources" .. ".json", game.table_to_json(output))
-	game.print("found resources: " .. game.table_to_json(existingEntities))
-end
-
-function Split(s, delimiter)
-	result = {};
-	for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-		table.insert(result, match);
-	end
-	return result;
+	game.write_file("resources.json", game.table_to_json(output))
+	game.print("done")
 end
 
 local function getdir(x, y)
@@ -90,11 +74,6 @@ end)
 
 script.on_event(defines.events.on_script_path_request_finished, function(event) 
 	p.print(game.table_to_json(event))
-end)
-
-script.on_event(defines.events.on_game_created_from_scenario, function()
-	remote.call("freeplay", "set_skip_intro", true)
-	speed(1)
 end)
 
 script.on_event(defines.events.on_tick, function(event)
