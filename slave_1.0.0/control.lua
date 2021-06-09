@@ -41,21 +41,17 @@ end
 local function get_dir(x, y)
 	local delta_x = x - p.position.x
 	local delta_y = y - p.position.y
-
 	if delta_x > 0.2 then
-		-- Easterly
 		if     delta_y >  0.2 then return {walking = true, direction = defines.direction.southeast}
 		elseif delta_y < -0.2 then return {walking = true, direction = defines.direction.northeast}
 		else                       return {walking = true, direction = defines.direction.east}
 		end
 	elseif delta_x < -0.2 then
-		-- Westerly
 		if     delta_y >  0.2 then return {walking = true, direction = defines.direction.southwest}
 		elseif delta_y < -0.2 then return {walking = true, direction = defines.direction.northwest}
 		else                       return {walking = true, direction = defines.direction.west}
 		end
 	else
-		-- Vertically
 		if     delta_y >  0.2 then return {walking = true,  direction = defines.direction.south}
 		elseif delta_y < -0.2 then return {walking = true,  direction = defines.direction.north}
 		else                       return {walking = false, direction = defines.direction.north}
@@ -63,10 +59,22 @@ local function get_dir(x, y)
 	end
 end
 
+local function mark_area(color, text, x1, y1, x2, y2)
+	rendering.draw_rectangle{
+		color = color,
+		filled = true,
+		left_top = {x1, y1},
+		right_bottom = {x2, y2},
+		time_to_live = 600,
+		surface = surface,
+	}
+end
+
 commands.add_command("walkto", nil, function(command)
-	args = game.json_to_table(command.parameter)
+	local args = game.json_to_table(command.parameter)
 	if args == nil then -- check that the argument is valid
 		game.print("wrong input: " .. command.parameter)
+		return
 	end
 	walking_state = get_dir(args.x, args.y) -- this sets the walking state to true
 	walking_to = args
@@ -74,6 +82,15 @@ end)
 
 commands.add_command("writeworld", nil, function(command)
 	write_world()
+end)
+
+commands.add_command("drawbox", nil, function(command)
+	local a = game.json_to_table(command.parameter)
+	if a == nil then -- check that the argument is valid
+		game.print("wrong input: " .. command.parameter)
+		return
+	end
+	mark_area(a.color, nil, a.x1, a.y1, a.x2, a.y2)
 end)
 
 script.on_event(defines.events.on_tick, function(event)

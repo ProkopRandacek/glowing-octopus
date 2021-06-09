@@ -1,0 +1,2 @@
+#!/bin/sh
+ln -sf $(pwd)/slave_1.0.0 ~/.factorio/mods
