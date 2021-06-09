@@ -4,7 +4,7 @@
 - [x] Map export
   - [ ] Endgame huge map ready map export
 - [x] Walk to x y
-- [ ] Debug draw
+- [x] Debug draw
 
 ## Go side:
 - [x] RCON

@@ -1,20 +1,27 @@
 require("util")
+require("helper")
 
-local walking_state = {walking = false}
-local walking_to = {x = 0, y = 0}
-local p;
-local surface;
+walking_state = {walking = false} --  what direction we are walking and if were walking
+walking_to = {} -- the position that were walking to
+p = {}; -- player
+surface = {};
 
-local function has_value(tab, val)
-	for index, value in ipairs(tab) do
-		if value == val then return true end
-	end
-	return false
+--- =================== ---
+--- ===  FUNCTIONS  === ---
+--- =================== ---
+
+function mark_area(color, text, x1, y1, x2, y2)
+	rendering.draw_rectangle{
+		color = color,
+		filled = true,
+		left_top = {x1, y1},
+		right_bottom = {x2, y2},
+		time_to_live = 600,
+		surface = surface,
+	}
 end
 
-local function write_world()
-	local surface = game.get_surface("nauvis")
-
+function write_world()
 	-- == water == --
 	local tiles = surface.find_tiles_filtered{name = {"water", "deepwater"}}
 	local output = {}
@@ -35,40 +42,12 @@ local function write_world()
 		table.insert(output[e.name], {e.position.x, e.position.y, e.amount})
 	end
 	game.write_file("resources.json", game.table_to_json(output))
-	game.print("done")
+	game.print("world export done")
 end
 
-local function get_dir(x, y)
-	local delta_x = x - p.position.x
-	local delta_y = y - p.position.y
-	if delta_x > 0.2 then
-		if     delta_y >  0.2 then return {walking = true, direction = defines.direction.southeast}
-		elseif delta_y < -0.2 then return {walking = true, direction = defines.direction.northeast}
-		else                       return {walking = true, direction = defines.direction.east}
-		end
-	elseif delta_x < -0.2 then
-		if     delta_y >  0.2 then return {walking = true, direction = defines.direction.southwest}
-		elseif delta_y < -0.2 then return {walking = true, direction = defines.direction.northwest}
-		else                       return {walking = true, direction = defines.direction.west}
-		end
-	else
-		if     delta_y >  0.2 then return {walking = true,  direction = defines.direction.south}
-		elseif delta_y < -0.2 then return {walking = true,  direction = defines.direction.north}
-		else                       return {walking = false, direction = defines.direction.north}
-		end
-	end
-end
-
-local function mark_area(color, text, x1, y1, x2, y2)
-	rendering.draw_rectangle{
-		color = color,
-		filled = true,
-		left_top = {x1, y1},
-		right_bottom = {x2, y2},
-		time_to_live = 600,
-		surface = surface,
-	}
-end
+--- ================== ---
+--- ===  COMMANDS  === ---
+--- ================== ---
 
 commands.add_command("walkto", nil, function(command)
 	local args = game.json_to_table(command.parameter)
@@ -93,9 +72,13 @@ commands.add_command("drawbox", nil, function(command)
 	mark_area(a.color, nil, a.x1, a.y1, a.x2, a.y2)
 end)
 
+--- ================ ---
+--- ===  EVENTS  === ---
+--- ================ ---
+
 script.on_event(defines.events.on_tick, function(event)
 	p = game.players[1];
-	surface = game.surfaces[1];
+	surface = game.get_surface("nauvis")
 
 	if walking_state.walking then
 		p.walking_state = walking_state
