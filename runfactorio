@@ -1,0 +1,8 @@
+#!/bin/sh
+if [ ! -f ./fac ]; then
+	./getfactorio
+fi
+if [ ! -f ./map.zip ]; then # generate the map if it doesn't exist
+	./fac --create ./map.zip
+fi
+./fac --start-server ./map.zip --rcon-bind "localhost:7000" --rcon-password "123456"
