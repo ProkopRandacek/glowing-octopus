@@ -3,11 +3,11 @@ Autonomous Factorio bot.
 
 ## Mod side:
 - [x] Map export
-  - [ ] Better map export
-- [ ] Walk to x y
+  - [ ] Fast map export
+- [x] Walk to x y
 - [x] Drawbox
 - [ ] Place thing
-- [ ] Craft thing
+- [x] Craft thing
 - [ ] Set recipe
 - [ ] Rotate thing
 - [ ] Put item into a thing
@@ -16,8 +16,9 @@ Autonomous Factorio bot.
 ## Go side:
 - [x] RCON
  - [x] Map export
- - [x] Walkto
- - [x] Drawbox
+ - [x] Walk to
+ - [x] Draw box
+ - [x] Craft thing
 - [ ] Mapper
   - [x] Read exported map and generate lookup maps
   - [ ] Check for patch intersections and somehow resolve them
