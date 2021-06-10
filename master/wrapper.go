@@ -53,6 +53,6 @@ func (b *Bot) getWorld() (RawWorld, error) {
 	return world, nil
 }
 
-func (b *Bot) drawBox(box Box) {
-	b.conn.Execute(fmt.Sprintf(`/drawbox {"color":[1, 0, 0, 0.2],"x1":%2.f,"y1":%2.f,"x2":%2.f,"y2":%2.f}`, box.tl.x, box.tl.y, box.br.x, box.br.y))
+func (b *Bot) drawBox(box Box, color Color) {
+	b.conn.Execute(fmt.Sprintf(`/drawbox {"color":[%2.f, %2.f, %2.f, 0.2],"x1":%2.f,"y1":%2.f,"x2":%2.f,"y2":%2.f}`, color.R, color.G, color.B, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }

@@ -4,7 +4,7 @@ Autonomous Factorio bot.
 ## Mod side:
 - [x] Map export
   - [ ] Better map export
-- [x] Walk to x y
+- [ ] Walk to x y
 - [x] Drawbox
 - [ ] Place thing
 - [ ] Craft thing
@@ -21,10 +21,12 @@ Autonomous Factorio bot.
 - [ ] Mapper
   - [x] Read exported map and generate lookup maps
   - [ ] Check for patch intersections and somehow resolve them
-  - [ ] Area allocating / deallocating
+  - [x] Area allocating / deallocating
   - [ ] Belt path finding
 - [ ] Tasks
   - [ ] Task lists
   - [ ] Task dependencies
   - [ ] ...
 - [ ] Building
+- [ ] Unit tests
+- [ ] Command shell

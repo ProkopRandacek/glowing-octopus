@@ -4,16 +4,6 @@ import (
 	"math"
 )
 
-type Position struct {
-	x float64
-	y float64
-}
-
-type Box struct {
-	tl Position // top left
-	br Position // bottom right
-}
-
 type ResourceMaps struct {
 	iron          []Position
 	copper        []Position
@@ -36,7 +26,7 @@ func CalcBoxes(tiles []Position) (boxes []Box) {
 			pos, q = q[0], q[1:] // pop firts value
 			for _, ox := range [3]float64{-1.0, 0.0, 1.0} {
 				for _, oy := range [3]float64{-1.0, 0.0, 1.0} { // for each direction from our position
-					move := Position{pos.x + ox, pos.y + oy}            // move in that direction
+					move := Position{pos.X + ox, pos.Y + oy}            // move in that direction
 					if contains(tiles, move) && !contains(seen, move) { // if that position is a ore and not visited already
 						q = append(q, move)            // add it to queue
 						tiles = removeVal(tiles, move) // and remove it from ore list
@@ -44,10 +34,10 @@ func CalcBoxes(tiles []Position) (boxes []Box) {
 				}
 			}
 			seen = append(seen, pos)
-			maxx = math.Max(maxx, pos.x) // update box checks
-			maxy = math.Max(maxy, pos.y)
-			minx = math.Min(minx, pos.x)
-			miny = math.Min(miny, pos.y)
+			maxx = math.Max(maxx, pos.X) // update box checks
+			maxy = math.Max(maxy, pos.Y)
+			minx = math.Min(minx, pos.X)
+			miny = math.Min(miny, pos.Y)
 			if len(q) == 0 {
 				break
 			}
