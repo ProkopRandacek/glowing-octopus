@@ -1,13 +1,30 @@
 # fbot
+Autonomous Factorio bot.
 
 ## Mod side:
 - [x] Map export
   - [ ] Better map export
 - [x] Walk to x y
-- [x] Debug draw
+- [x] Drawbox
+- [ ] Place thing
+- [ ] Craft thing
+- [ ] Set recipe
+- [ ] Rotate thing
+- [ ] Put item into a thing
+- [ ] Take item from a thing
 
 ## Go side:
 - [x] RCON
+ - [x] Map export
+ - [x] Walkto
+ - [x] Drawbox
 - [ ] Mapper
-  - [ ] Read exported map and generate lookup maps
+  - [x] Read exported map and generate lookup maps
+  - [ ] Check for patch intersections and somehow resolve them
   - [ ] Area allocating / deallocating
+  - [ ] Belt path finding
+- [ ] Tasks
+  - [ ] Task lists
+  - [ ] Task dependencies
+  - [ ] ...
+- [ ] Building
