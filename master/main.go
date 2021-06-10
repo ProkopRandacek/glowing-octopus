@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -21,8 +21,8 @@ func main() {
 	}
 
 	//bot.walkTo(20, 20)
-	str, err := bot.getWorld()
+	rawWorld, err := bot.getWorld()
 
-	fmt.Println(str)
-	fmt.Printf("err: %s\n", err.Error())
+	fmt.Printf("%v\n", rawWorld)
+	//fmt.Printf("err: %s\n", err.Error())
 }

@@ -1,10 +1,10 @@
 require("util")
 require("helper")
 
-walking_state = {walking = false} --  what direction we are walking and if were walking
-walking_to = {} -- the position that were walking to
-p = {}; -- player
-surface = {};
+local walking_state = {walking = false} --  what direction we are walking and if were walking
+local walking_to = {} -- the position that were walking to
+local p; -- player
+local surface;
 
 --- =================== ---
 --- ===  FUNCTIONS  === ---
@@ -23,16 +23,14 @@ end
 
 function write_world()
 	-- == water == --
-	local tiles = surface.find_tiles_filtered{name = {"water", "deepwater"}}
-	local output = {}
+	local tiles = game.surfaces[1].find_tiles_filtered{name = {"water", "deepwater"}}
+	local output = {water = {}}
 	for i, t in pairs(tiles) do
-		output[i] = { t.position.x, t.position.y }
+		output["water"][i] = { t.position.x, t.position.y }
 	end
-	game.write_file("water.json", game.table_to_json(output))
 
 	-- == resources == --
-	local entities = surface.find_entities_filtered{type="resource"}
-	output = {}
+	local entities = game.surfaces[1].find_entities_filtered{type="resource"}
 	existingEntities = {}
 	for i, e in pairs(entities) do
 		if not has_value(existingEntities, e.name) then
@@ -41,7 +39,7 @@ function write_world()
 		end
 		table.insert(output[e.name], {e.position.x, e.position.y, e.amount})
 	end
-	game.write_file("resources.json", game.table_to_json(output))
+	game.write_file("world.json", game.table_to_json(output))
 	game.print("world export done")
 end
 
@@ -78,7 +76,7 @@ end)
 
 script.on_event(defines.events.on_tick, function(event)
 	p = game.players[1];
-	surface = game.get_surface("nauvis")
+	surface = game.surfaces[1];
 
 	if walking_state.walking then
 		p.walking_state = walking_state
