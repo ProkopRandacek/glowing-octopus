@@ -17,7 +17,7 @@ type ResourceMaps struct {
 
 type Area struct {
 	Dims Box
-	Id int
+	Id   int
 }
 
 var allocIdCounter = 0
@@ -62,6 +62,7 @@ func (rm *ResourceMaps) CalcPatches() {
 }
 
 type Mapper struct {
+	Areas      []Area // marks what areas area allocated
 	mallMap    map[string]Position
 	allocMap   []Box
 	waterTiles []Position // the exact tiles that are in water
@@ -95,8 +96,8 @@ func (m *Mapper) readRawWorld(rw RawWorld) {
 }
 
 // returns true, if dims is available
-func (b *Bot) canAlloc(dims Box) bool {
-	for _, a := range b.Areas {
+func (m *Mapper) canAlloc(dims Box) bool {
+	for _, a := range m.Areas {
 		d := a.Dims
 
 		if d.Br.X >= dims.Tl.X && d.Br.Y >= dims.Tl.Y && d.Tl.X <= dims.Br.X && d.Tl.Y <= dims.Br.Y {
@@ -107,24 +108,22 @@ func (b *Bot) canAlloc(dims Box) bool {
 }
 
 // allocates area and returns it's id. Returns -1 if area not available.
-func (b *Bot) alloc(dims Box) int {
-	if !b.canAlloc(dims) {
+func (m *Mapper) alloc(dims Box) int {
+	if !m.canAlloc(dims) {
 		return -1
 	}
 
-	b.Areas = append(b.Areas, Area{dims, allocIdCounter})
+	m.Areas = append(m.Areas, Area{dims, allocIdCounter})
 	allocIdCounter++
 
-	b.drawBox(dims, Color{0, 1, 1})
-
-	return allocIdCounter-1
+	return allocIdCounter - 1
 }
 
 // frees area by id. Returns true, if successful
-func (b *Bot) free(id int) bool {
-	for i, v := range b.Areas {
+func (m *Mapper) free(id int) bool {
+	for i, v := range m.Areas {
 		if v.Id == id {
-			b.Areas = append(b.Areas[:i], b.Areas[i+1:]...)
+			m.Areas = append(m.Areas[:i], m.Areas[i+1:]...)
 			return true
 		}
 	}

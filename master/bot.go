@@ -5,8 +5,8 @@ import (
 )
 
 type Bot struct {
-	conn *rcon.RCON
-	Areas []Area
+	conn   *rcon.RCON
+	mapper Mapper
 }
 
 func newBot(address, password string) (Bot, error) {
