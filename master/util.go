@@ -19,5 +19,5 @@ func removeVal(s []Position, e Position) []Position {
 }
 
 func remove(slice []Position, s int) []Position {
-    return append(slice[:s], slice[s+1:]...)
+	return append(slice[:s], slice[s+1:]...)
 }
