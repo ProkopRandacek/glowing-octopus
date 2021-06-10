@@ -2,7 +2,7 @@
 
 ## Mod side:
 - [x] Map export
-  - [ ] Endgame huge map ready map export
+  - [ ] Better map export
 - [x] Walk to x y
 - [x] Debug draw
 

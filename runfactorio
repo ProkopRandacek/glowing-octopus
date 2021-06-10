@@ -1,8 +1,9 @@
 #!/bin/sh
-if [ ! -f ./fac ]; then
+if [ ! -f ./fac ]; then # download factorio if it isnt already
 	./getfactorio
 fi
-if [ ! -f ./map.zip ]; then # generate the map if it doesn't exist
+if [ ! -f ./map.zip ]; then # generate the map if it isnt already
 	./fac --create ./map.zip
 fi
+# run the server
 ./fac --start-server ./map.zip --rcon-bind "localhost:7000" --rcon-password "123456"

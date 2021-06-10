@@ -23,6 +23,10 @@ func main() {
 	//bot.walkTo(20, 20)
 	rawWorld, err := bot.getWorld()
 
-	fmt.Printf("%v\n", rawWorld)
-	//fmt.Printf("err: %s\n", err.Error())
+	mapper := Mapper{}
+	mapper.readRawWorld(rawWorld)
+
+	bot.drawBox(mapper.resMaps.ironPatches[0])
+
+	fmt.Println(mapper.resMaps.ironPatches)
 }
