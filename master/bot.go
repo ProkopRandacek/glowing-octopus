@@ -10,6 +10,7 @@ import (
 type State struct { // Lua bot internal representation
 	Pos     Position `json:"position"`
 	Walking bool     `json:"walking_state"`
+	Mining  bool     `json:"mining_state"`
 }
 
 type Bot struct {

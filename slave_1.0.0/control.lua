@@ -2,6 +2,10 @@ require("util")
 
 local walking_state = {walking = false} --  what direction we are walking and if were walking
 local walking_to = {} -- the position that were walking to
+
+local mining = false
+local mining_target = nil
+
 local p; -- player
 local surface;
 
@@ -16,22 +20,22 @@ function has_value(tab, val) -- check if key is in a table
 	return false
 end
 
-function get_dir(x, y) -- returns the direction from player position to {x. y}
+function get_dir(x, y, eps) -- returns the direction from player position to {x. y}
 	local delta_x = x - p.position.x
 	local delta_y = y - p.position.y
-	if delta_x > 0.2 then
-		if     delta_y >  0.2 then return {walking = true, direction = defines.direction.southeast}
-		elseif delta_y < -0.2 then return {walking = true, direction = defines.direction.northeast}
+	if delta_x > eps then
+		if     delta_y >  eps then return {walking = true, direction = defines.direction.southeast}
+		elseif delta_y < -eps then return {walking = true, direction = defines.direction.northeast}
 		else                       return {walking = true, direction = defines.direction.east}
 		end
-	elseif delta_x < -0.2 then
-		if     delta_y >  0.2 then return {walking = true, direction = defines.direction.southwest}
-		elseif delta_y < -0.2 then return {walking = true, direction = defines.direction.northwest}
+	elseif delta_x < -eps then
+		if     delta_y >  eps then return {walking = true, direction = defines.direction.southwest}
+		elseif delta_y < -eps then return {walking = true, direction = defines.direction.northwest}
 		else                       return {walking = true, direction = defines.direction.west}
 		end
 	else
-		if     delta_y >  0.2 then return {walking = true,  direction = defines.direction.south}
-		elseif delta_y < -0.2 then return {walking = true,  direction = defines.direction.north}
+		if     delta_y >  eps then return {walking = true,  direction = defines.direction.south}
+		elseif delta_y < -eps then return {walking = true,  direction = defines.direction.north}
 		else                       return {walking = false, direction = defines.direction.north}
 		end
 	end
@@ -96,6 +100,7 @@ end
 function write_state()
 	state = {
 		["walking_state"] = walking_state.walking,
+		["mining_state"] = mining,
 		["position"] = p.position
 	}
 	game.write_file("state.json", game.table_to_json(state) .. "\n")
@@ -115,7 +120,7 @@ commands.add_command("walkto", nil, function(command)
 		game.print("wrong input: " .. command.parameter)
 		return
 	end
-	walking_state = get_dir(args.x, args.y) -- this sets the walking state to true
+	walking_state = get_dir(args.x, args.y, 0.2) -- this sets the walking state to true
 	write_state()
 	walking_to = args
 end)
@@ -131,6 +136,24 @@ end)
 
 commands.add_command("writerocks", nil, function(command)
 	write_rocks()
+end)
+
+commands.add_command("mine", nil, function(command)
+	local a = game.json_to_table(command.parameter)
+	if a == nil then -- check that the argument is valid
+		game.print("wrong input: " .. command.parameter)
+		return
+	end
+	mining_target = surface.find_entities_filtered{limit=1,position = a, radius = 2.0}[1]
+	if mining_target == nil then
+		game.print("mine target entity not found")
+		return
+	elseif not p.can_reach_entity(mining_target) then
+		game.print("mine target entity cannot be reached")
+		return
+	end
+
+	mining = true
 end)
 
 commands.add_command("drawbox", nil, function(command)
@@ -159,15 +182,12 @@ script.on_event(defines.events.on_tick, function(event)
 	p = game.players[1];
 	surface = game.surfaces[1];
 
-	--[[text = "" -- debug print names and types of entities around the player
-	for key,val in pairs(surface.find_entities_filtered{position = p.position, radius = 4}) do
-		text = text .. "[" .. val.name .. "]"
-	end
-	game.print(text)]]
-
-	if walking_state.walking then -- update player walking state
+	if mining then
+		p.update_selected_entity(mining_target.position)
+		p.mining_state = {mining = true, position = mining_target.position}
+	elseif walking_state.walking then -- update player walking state
 		p.walking_state = walking_state
-		walking_state = get_dir(walking_to.x, walking_to.y)
+		walking_state = get_dir(walking_to.x, walking_to.y, 0.2)
 		if not walking_state.walking then
 			p.walking_state = walking_state -- stop the player
 			game.print("walking done")
@@ -177,4 +197,9 @@ end)
 
 script.on_nth_tick(60, function(event) -- update state once per second
 	write_state()
+end)
+
+script.on_event(defines.events.on_player_mined_entity, function(event)
+	mining = false -- todo: i should check if the right entity was mined and stuff
+	game.print("mining done")
 end)

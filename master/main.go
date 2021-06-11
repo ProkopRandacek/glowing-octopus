@@ -20,8 +20,9 @@ func main() {
 		return
 	}
 
-	bot.walkTo(20, 20)
-	bot.waitForWalkDone()
-	//bot.craft("wooden-chest", 1)
-	//bot.getWorld(Box{Position{-50, -50}, Position{50, 50}})
+	trees, _ := bot.getTrees(Box{Position{-100, -100}, Position{100, 100}})
+	target := Position{trees[0][0], trees[0][1]}
+	bot.walkTo(target)
+	bot.waitForTaskDone()
+	bot.mine(target)
 }
