@@ -74,6 +74,29 @@ function write_world()
 	game.print("world export done")
 end
 
+function write_trees()
+	output = {}
+	for i, e in pairs(game.surfaces[1].find_entities_filtered{type="tree"}) do
+		output[i] = {e.position.x, e.position.y, e.prototype.mineable_properties.products[1].amount}
+	end
+	game.write_file("trees.json", game.table_to_json(output))
+	game.print("trees export done")
+end
+
+function write_rocks() -- the ammount of rocks is tiny, this function can export rocks in huge world in a fraction of a second
+	output = {}
+	for i, e in pairs(game.surfaces[1].find_entities_filtered{name={"rock-huge", "sand-rock-big", "rock-big"}}) do
+		products = e.prototype.mineable_properties.products
+		for i, e in pairs(products) do
+			e["type"] = nil
+			e["probability"] = nil
+		end
+		output[i] = {e.position.x, e.position.y, products}
+	end
+	game.write_file("rocks.json", game.table_to_json(output))
+	game.print("rocks export done")
+end
+
 function craft(recipe, count)
 	rcon.print(p.begin_crafting{recipe=recipe, count=count})
 end
@@ -94,6 +117,14 @@ end)
 
 commands.add_command("writeworld", nil, function(command)
 	write_world()
+end)
+
+commands.add_command("writetrees", nil, function(command)
+	write_trees()
+end)
+
+commands.add_command("writerocks", nil, function(command)
+	write_rocks()
 end)
 
 commands.add_command("drawbox", nil, function(command)
@@ -122,7 +153,13 @@ script.on_event(defines.events.on_tick, function(event)
 	p = game.players[1];
 	surface = game.surfaces[1];
 
-	if walking_state.walking then
+	--[[text = "" -- debug print names and types of entities around the player
+	for key,val in pairs(surface.find_entities_filtered{position = p.position, radius = 4}) do
+		text = text .. "[" .. val.name .. "]"
+	end
+	game.print(text)]]
+
+	if walking_state.walking then -- update player walking state
 		p.walking_state = walking_state
 		walking_state = get_dir(walking_to.x, walking_to.y)
 		if not walking_state.walking then
