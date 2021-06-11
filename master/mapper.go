@@ -4,15 +4,20 @@ import (
 	"math"
 )
 
+type OrePatch struct {
+	Dims Box
+	Unsafe bool
+}
+
 type ResourceMaps struct {
 	Iron          []Position
 	Copper        []Position
 	Stone         []Position
 	Coal          []Position
-	IronPatches   []Box
-	CopperPatches []Box
-	StonePatches  []Box
-	CoalPatches   []Box
+	IronPatches   []OrePatch
+	CopperPatches []OrePatch
+	StonePatches  []OrePatch
+	CoalPatches   []OrePatch
 }
 
 type Area struct {
@@ -28,10 +33,39 @@ type Mapper struct {
 	WaterTiles     []Position // the exact tiles that are in water
 	WaterBox       Box        // water boxes for fast intersection check
 	ResMaps        ResourceMaps
-	OrePatches     map[string][]Box
+	OrePatches     map[string][]OrePatch
+	LoadedBoxes []Box
 }
 
-func CalcBoxes(tiles []Position) (boxes []Box) {
+func isBorderSharedWithBox(box Box, boxes []Box, ignore int) bool {
+	for i, b := range boxes {
+		if i == ignore {
+			continue
+		}
+
+		if box.Tl.X == b.Tl.X ||
+				box.Tl.Y == b.Tl.Y ||
+				box.Br.X == b.Br.Y ||
+				box.Br.Y == b.Br.Y {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (o *OrePatch) isUnsafe(boxes []Box) {
+	for i, b := range boxes {
+		if isBorderSharedWithBox(o.Dims, []Box{b}, -1) && !isBorderSharedWithBox(b, boxes, i) {
+			o.Unsafe = true
+			return
+		}
+	}
+
+	o.Unsafe = false
+}
+
+func CalcBoxes(tiles []Position) (boxes []OrePatch) {
 	pos := Position{}
 	for len(tiles) > 0 { // iterate over all positions
 		pos, tiles = tiles[0], tiles[1:]                                               // pop firts value
@@ -58,7 +92,7 @@ func CalcBoxes(tiles []Position) (boxes []Box) {
 				break
 			}
 		}
-		boxes = append(boxes, Box{Position{maxx, miny}, Position{minx, maxy}})
+		boxes = append(boxes, OrePatch{Box{Position{maxx, miny}, Position{minx, maxy}}, false})
 	}
 	return
 }
@@ -68,6 +102,10 @@ func (rm *ResourceMaps) CalcPatches() {
 	rm.CopperPatches = CalcBoxes(rm.Copper)
 	rm.StonePatches = CalcBoxes(rm.Stone)
 	rm.CoalPatches = CalcBoxes(rm.Coal)
+}
+
+func (m *Mapper) calcUnsafe() {
+	
 }
 
 func (m *Mapper) readRawWorld(rw RawWorld) {
