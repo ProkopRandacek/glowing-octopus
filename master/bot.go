@@ -43,7 +43,7 @@ func newBot(address, password string) (Bot, error) {
 
 func (b *Bot) refreshState() {
 	f, err := os.Open("./master/script-output/state.json")
-	if f != nil {
+	if f == nil {
 		fmt.Println("Error opening state file: ", err)
 		return
 	}

@@ -7,6 +7,7 @@ import (
 type OrePatch struct {
 	Dims   Box
 	Unsafe bool
+	Type int
 }
 
 type Area struct {
@@ -26,16 +27,31 @@ type Mapper struct {
 	LoadedBoxes    []Box        // all the area boxes that we requested from the game
 }
 
+// Ore types
+const (
+	iron = iota
+	copper
+	stone
+	coal
+	uran
+)
+
 func isBorderSharedWithBox(box Box, boxes []Box, ignore int) bool {
+	box.Round()
+
 	for i, b := range boxes {
 		if i == ignore {
 			continue
 		}
 
+		b.Round()
+
 		if box.Tl.X == b.Tl.X ||
 			box.Tl.Y == b.Tl.Y ||
 			box.Br.X == b.Br.Y ||
-			box.Br.Y == b.Br.Y {
+			box.Br.Y == b.Br.Y ||
+			box.Tl.X == b.Br.X ||
+			box.Tl.Y == b.Br.Y {
 			return true
 		}
 	}
@@ -81,7 +97,7 @@ func findComponents(tiles []Position) (boxes []OrePatch) { // divide graph into 
 				break
 			}
 		}
-		boxes = append(boxes, OrePatch{Box{Position{maxx, miny}, Position{minx, maxy}}, false})
+		boxes = append(boxes, OrePatch{Box{Position{maxx, miny}, Position{minx, maxy}}, false, 0})
 	}
 	return
 }
@@ -93,7 +109,12 @@ func (m *Mapper) calcPatches() {
 }
 
 func (m *Mapper) calcUnsafe() {
-	// TODO
+	for i := range m.OrePatches {
+		for j := range m.OrePatches[i] {
+			m.OrePatches[i][j].isUnsafe(m.LoadedBoxes)
+			m.OrePatches[i][j].Type = i
+		}
+	}
 }
 
 func (m *Mapper) readResources(r [][]Position) {
@@ -102,7 +123,8 @@ func (m *Mapper) readResources(r [][]Position) {
 			m.Resrcs[t] = append(m.Resrcs[t], r[t]...) // append the ores to it
 		}
 	}
-	m.CalcPatches()
+	m.calcPatches()
+	m.calcUnsafe()
 }
 
 // returns true, if dims is available

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+	"math"
 )
 
 type Color struct {
@@ -19,6 +20,10 @@ type Box struct {
 	Br Position // bottom right
 }
 
+type Measurable interface {
+	getDims() Box
+}
+
 var lastLog string
 
 func log(msg string) {
@@ -31,4 +36,11 @@ func log(msg string) {
 	fps := 2.6
 	fmt.Printf("\x1b[2K\x1b[0G%s %s", bar[int(time.Now().UnixNano()/int64(1000000000.0/fps))%len(bar)], msg)
 	lastLog = msg
+}
+
+func (b *Box) Round() {
+	b.Tl.X = math.Round(b.Tl.X)
+	b.Tl.Y = math.Round(b.Tl.Y)
+	b.Br.X = math.Round(b.Br.X)
+	b.Br.Y = math.Round(b.Br.Y)
 }

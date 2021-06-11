@@ -61,6 +61,8 @@ func (b *Bot) getResources(box Box) ([][]Position, error) {
 	var resrc [][]Position
 	json.Unmarshal(dat, &resrc)
 
+	b.Mapper.LoadedBoxes = append(b.Mapper.LoadedBoxes, box)
+
 	return resrc, nil
 }
 
