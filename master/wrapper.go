@@ -25,9 +25,9 @@ func (b *Bot) walkTo(x, y int) error {
 	return err
 }
 
-func (b *Bot) getWorld() (RawWorld, error) {
+func (b *Bot) getWorld(box Box) (RawWorld, error) {
 	os.Remove(worldFilename)
-	_, err := b.conn.Execute("/writeworld")
+	_, err := b.conn.Execute(fmt.Sprintf("/writeworld [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 	if err != nil {
 		return RawWorld{}, err
 	}

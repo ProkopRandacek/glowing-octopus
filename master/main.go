@@ -22,4 +22,5 @@ func main() {
 
 	bot.walkTo(20, 20)
 	bot.craft("wooden-chest", 1)
+	bot.getWorld(Box{Position{-50, -50}, Position{50, 50}})
 }

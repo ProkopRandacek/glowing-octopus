@@ -52,38 +52,34 @@ function mark_area(color, text, x1, y1, x2, y2)
 	}
 end
 
-function write_world()
-	-- == water == --
-	local tiles = game.surfaces[1].find_tiles_filtered{name = {"water", "deepwater"}}
-	local output = {water = {}}
-	for i, t in pairs(tiles) do
+function write_world(area)
+	local output = {
+		["water"] = {},
+		["iron-ore"] = {},
+		["copper-ore"] = {},
+		["coal"] = {},
+		["stone"] = {}
+	}
+	for i, t in pairs(game.surfaces[1].find_tiles_filtered{area = area, name = {"water", "deepwater"}}) do
 		output["water"][i] = { t.position.x, t.position.y }
 	end
-
-	-- == resources == --
-	local entities = game.surfaces[1].find_entities_filtered{type="resource"}
-	existingEntities = {}
-	for i, e in pairs(entities) do
-		if not has_value(existingEntities, e.name) then
-			output[e.name] = {}
-			table.insert(existingEntities, e.name)
-		end
+	for i, e in pairs(game.surfaces[1].find_entities_filtered{area = area, type="resource"}) do
 		table.insert(output[e.name], {e.position.x, e.position.y, e.amount})
 	end
 	game.write_file("world.json", game.table_to_json(output))
 	game.print("world export done")
 end
 
-function write_trees()
+function write_trees(area)
 	output = {}
-	for i, e in pairs(game.surfaces[1].find_entities_filtered{type="tree"}) do
+	for i, e in pairs(game.surfaces[1].find_entities_filtered{area = area, type="tree"}) do
 		output[i] = {e.position.x, e.position.y, e.prototype.mineable_properties.products[1].amount}
 	end
 	game.write_file("trees.json", game.table_to_json(output))
 	game.print("trees export done")
 end
 
-function write_rocks() -- the ammount of rocks is tiny, this function can export rocks in huge world in a fraction of a second
+function write_rocks() -- the ammount of rocks is tiny, this function can export all rocks in huge world in a fraction of a second
 	output = {}
 	for i, e in pairs(game.surfaces[1].find_entities_filtered{name={"rock-huge", "sand-rock-big", "rock-big"}}) do
 		products = e.prototype.mineable_properties.products
@@ -116,11 +112,12 @@ commands.add_command("walkto", nil, function(command)
 end)
 
 commands.add_command("writeworld", nil, function(command)
-	write_world()
+	write_world(game.json_to_table(command.parameter))
 end)
 
 commands.add_command("writetrees", nil, function(command)
-	write_trees()
+	area = game.json_to_table(command.parameter)
+	write_trees(area)
 end)
 
 commands.add_command("writerocks", nil, function(command)
