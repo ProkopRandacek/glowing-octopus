@@ -20,10 +20,7 @@ func main() {
 		return
 	}
 
-	bot.getWorld(Box{Position{-100, -100}, Position{100, 100}})
-	/*trees, _ := bot.getTrees(Box{Position{-100, -100}, Position{100, 100}})
-	target := Position{trees[0][0], trees[0][1]}
-	bot.walkTo(target)
-	bot.waitForTaskDone()
-	bot.mine(target)*/
+	r, _ := bot.getResources(Box{Position{-100, -100}, Position{100, 100}})
+	bot.Mapper.readResources(r)
+	log(fmt.Sprintf("%v\n", bot.Mapper.OrePatches))
 }

@@ -1,0 +1,49 @@
+/*package main
+
+import (
+	"math"
+)
+
+func abDistance(a, b Position) float64 {
+	dx := b.X - a.X
+	dy := b.Y - a.Y
+	return math.Sqrt(dx * dx + dy * dy)
+}
+
+func (m *Mapper) isPosEmpty(a Position) bool {
+	for i, e := range m.Areas {
+		box := e.Dims
+		// tl is positive X and negative Y       br is negative X and positive Y
+		if (box.Tl.X < a.X && box.Tl.Y > a.Y) && (box.Br.X > a.X && box.Br.Y < a.Y) {
+			return false
+		}
+	}
+	return true
+}
+
+type BeltMove struct {
+	dest        Position
+	underground bool
+}
+
+func (m *Mapper) BeltPath(start, end Position) {
+	q := []Position{start}
+	seen := []Position{start}
+
+	for len(q) > 0 {
+		pos, q := q[0], q[1:]
+		moves := []Position{}
+
+		for _ ox := range [3]float64{-1, 0, 1} { // check every direction
+			for _ oy := range [3]float64{-1, 0, 1} {
+				if ox == 0 && oy == 0 {
+					continue
+				}
+				move := Position{pos.X + ox, pos.Y + oy}
+				if m.isPosEmpty(move) && !contains(seen, move) {
+					q = append(q, move)
+				}
+			}
+		}
+	}
+}*/

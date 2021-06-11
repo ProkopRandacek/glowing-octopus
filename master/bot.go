@@ -16,7 +16,7 @@ type State struct { // Lua bot internal representation
 
 type Bot struct {
 	conn   *rcon.RCON
-	mapper Mapper
+	Mapper Mapper
 	State  State
 }
 
@@ -34,13 +34,17 @@ func newBot(address, password string) (Bot, error) {
 		return bot, err
 	}
 
+	bot.Mapper = Mapper{}
+	bot.Mapper.Resrcs = make([][]Position, 4)
+	bot.Mapper.OrePatches = make([][]OrePatch, 4)
+
 	return bot, nil
 }
 
 func (b *Bot) refreshState() {
 	f, err := os.Open("./master/script-output/state.json")
 	if f != nil {
-		fmt.Println("Error reading state file: ", err)
+		fmt.Println("Error opening state file: ", err)
 		return
 	}
 	defer f.Close()

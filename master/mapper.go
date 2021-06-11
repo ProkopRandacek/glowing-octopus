@@ -5,19 +5,8 @@ import (
 )
 
 type OrePatch struct {
-	Dims Box
+	Dims   Box
 	Unsafe bool
-}
-
-type ResourceMaps struct {
-	Iron          []Position
-	Copper        []Position
-	Stone         []Position
-	Coal          []Position
-	IronPatches   []OrePatch
-	CopperPatches []OrePatch
-	StonePatches  []OrePatch
-	CoalPatches   []OrePatch
 }
 
 type Area struct {
@@ -30,11 +19,11 @@ type Mapper struct {
 	AllocIdCounter int    // for area id generation
 	MallMap        map[string]Position
 	AllocMap       []Box
-	WaterTiles     []Position // the exact tiles that are in water
-	WaterBox       Box        // water boxes for fast intersection check
-	ResMaps        ResourceMaps
-	OrePatches     map[string][]OrePatch
-	LoadedBoxes []Box
+	WaterTiles     []Position   // the exact tiles that are in water
+	WaterBox       Box          // water boxes for fast intersection check
+	Resrcs         [][]Position // all the individual ore tiles
+	OrePatches     [][]OrePatch // ore tiles grouped together into patches
+	LoadedBoxes    []Box        // all the area boxes that we requested from the game
 }
 
 func isBorderSharedWithBox(box Box, boxes []Box, ignore int) bool {
@@ -44,9 +33,9 @@ func isBorderSharedWithBox(box Box, boxes []Box, ignore int) bool {
 		}
 
 		if box.Tl.X == b.Tl.X ||
-				box.Tl.Y == b.Tl.Y ||
-				box.Br.X == b.Br.Y ||
-				box.Br.Y == b.Br.Y {
+			box.Tl.Y == b.Tl.Y ||
+			box.Br.X == b.Br.Y ||
+			box.Br.Y == b.Br.Y {
 			return true
 		}
 	}
@@ -65,7 +54,7 @@ func (o *OrePatch) isUnsafe(boxes []Box) {
 	o.Unsafe = false
 }
 
-func CalcBoxes(tiles []Position) (boxes []OrePatch) {
+func findComponents(tiles []Position) (boxes []OrePatch) { // divide graph into components but only store component bounds
 	pos := Position{}
 	for len(tiles) > 0 { // iterate over all positions
 		pos, tiles = tiles[0], tiles[1:]                                               // pop firts value
@@ -97,59 +86,23 @@ func CalcBoxes(tiles []Position) (boxes []OrePatch) {
 	return
 }
 
-func (rm *ResourceMaps) CalcPatches() {
-	rm.IronPatches = CalcBoxes(rm.Iron)
-	rm.CopperPatches = CalcBoxes(rm.Copper)
-	rm.StonePatches = CalcBoxes(rm.Stone)
-	rm.CoalPatches = CalcBoxes(rm.Coal)
+func (m *Mapper) calcPatches() {
+	for t := 0; t < 4; t++ { // for each resource type
+		m.OrePatches[t] = findComponents(m.Resrcs[t])
+	}
 }
 
 func (m *Mapper) calcUnsafe() {
-	
+	// TODO
 }
 
-func (m *Mapper) readRawWorld(rw RawWorld) {
-	m.WaterTiles = make([]Position, len(rw.Water))
-	m.ResMaps.Iron = make([]Position, len(rw.Iron))
-	m.ResMaps.Copper = make([]Position, len(rw.Copper))
-	m.ResMaps.Stone = make([]Position, len(rw.Stone))
-	m.ResMaps.Coal = make([]Position, len(rw.Coal))
-	for i, t := range rw.Water {
-		m.WaterTiles[i] = Position{t[0], t[1]}
+func (m *Mapper) readResources(r [][]Position) {
+	for t := 0; t < 4; t++ { // for each resource type
+		if len(r[t]) != 0 {
+			m.Resrcs[t] = append(m.Resrcs[t], r[t]...) // append the ores to it
+		}
 	}
-	for i, t := range rw.Iron {
-		m.ResMaps.Iron[i] = Position{t[0], t[1]}
-	}
-	for i, t := range rw.Copper {
-		m.ResMaps.Copper[i] = Position{t[0], t[1]}
-	}
-	for i, t := range rw.Stone {
-		m.ResMaps.Stone[i] = Position{t[0], t[1]}
-	}
-	for i, t := range rw.Coal {
-		m.ResMaps.Coal[i] = Position{t[0], t[1]}
-	}
-	m.ResMaps.CalcPatches()
-}
-
-// for when you get new world chunk and want to add the infomation to the mapper
-func (m *Mapper) addRawWorld(rw RawWorld) {
-	for _, t := range rw.Water {
-		m.WaterTiles = append(m.WaterTiles, Position{t[0], t[1]})
-	}
-	for _, t := range rw.Iron {
-		m.ResMaps.Iron = append(m.ResMaps.Iron, Position{t[0], t[1]})
-	}
-	for _, t := range rw.Copper {
-		m.ResMaps.Copper = append(m.ResMaps.Copper, Position{t[0], t[1]})
-	}
-	for _, t := range rw.Stone {
-		m.ResMaps.Stone = append(m.ResMaps.Stone, Position{t[0], t[1]})
-	}
-	for _, t := range rw.Coal {
-		m.ResMaps.Coal = append(m.ResMaps.Coal, Position{t[0], t[1]})
-	}
-	m.ResMaps.CalcPatches() // patches need to be recalculated
+	m.CalcPatches()
 }
 
 // returns true, if dims is available

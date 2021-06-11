@@ -9,17 +9,8 @@ import (
 )
 
 const (
-	worldFilename = "./master/script-output/world.json"
-	treesFilename = "./master/script-output/trees.json"
+	scriptFolder = "./master/script-output/"
 )
-
-type RawWorld struct {
-	Water  [][]float64 `json:"water"`
-	Iron   [][]float64 `json:"iron-ore"`
-	Copper [][]float64 `json:"copper-ore"`
-	Stone  [][]float64 `json:"stone"`
-	Coal   [][]float64 `json:"coal"`
-}
 
 func (b *Bot) walkTo(p Position) error {
 	b.State.Walking = true
@@ -38,58 +29,25 @@ func (b *Bot) waitForTaskDone() { // Waits until taks is done. Can be waiting fo
 	}
 }
 
-func (b *Bot) getWorld(box Box) (RawWorld, error) {
-	os.Remove(worldFilename)
-	_, err := b.conn.Execute(fmt.Sprintf("/writeworld [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
-	if err != nil {
-		return RawWorld{}, err
-	}
-
-	for { // wait until the file is written
-		_, err := os.Stat(worldFilename)
-		if err == nil {
-			break
-		}
-
-		log("Waiting for the world.json to be generated")
-		time.Sleep(time.Second)
-	}
-
-	f, err := os.Open(worldFilename)
-	if err != nil {
-		return RawWorld{}, err
-	}
-	defer f.Close()
-
-	dat, err := io.ReadAll(f)
-	if err != nil {
-		return RawWorld{}, err
-	}
-
-	var world RawWorld
-	json.Unmarshal(dat, &world)
-
-	return world, nil
-}
-
-func (b *Bot) getTrees(box Box) ([][]float64, error) {
-	os.Remove(treesFilename)
-	_, err := b.conn.Execute(fmt.Sprintf("/writetrees [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+func (b *Bot) getResources(box Box) ([][]Position, error) {
+	filename := scriptFolder + "resrc.json"
+	os.Remove(filename)
+	_, err := b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 	if err != nil {
 		return nil, err
 	}
 
 	for { // wait until the file is written
-		_, err := os.Stat(treesFilename)
+		_, err := os.Stat(filename)
 		if err == nil {
 			break
 		}
 
-		log("Waiting for the trees.json to be generated")
+		log(fmt.Sprintf("Waiting for the %s to be generated", filename))
 		time.Sleep(time.Second)
 	}
 
-	f, err := os.Open(treesFilename)
+	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +58,10 @@ func (b *Bot) getTrees(box Box) ([][]float64, error) {
 		return nil, err
 	}
 
-	var trees [][]float64
-	json.Unmarshal(dat, &trees)
+	var resrc [][]Position
+	json.Unmarshal(dat, &resrc)
 
-	return trees, nil
+	return resrc, nil
 }
 
 func (b *Bot) drawBox(box Box, color Color) {

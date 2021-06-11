@@ -29,6 +29,6 @@ func log(msg string) {
 	}
 
 	fps := 2.6
-	fmt.Printf("\x1b[2K\x1b[0G%s %s", bar[int(time.Now().UnixNano()/int64(1000000000.0/fps)) % len(bar)], msg)
+	fmt.Printf("\x1b[2K\x1b[0G%s %s", bar[int(time.Now().UnixNano()/int64(1000000000.0/fps))%len(bar)], msg)
 	lastLog = msg
 }

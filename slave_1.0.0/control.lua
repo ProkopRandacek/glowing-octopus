@@ -56,22 +56,23 @@ function mark_area(color, text, x1, y1, x2, y2)
 	}
 end
 
-function write_world(area)
-	local output = {
-		["water"] = {},
-		["iron-ore"] = {},
-		["copper-ore"] = {},
-		["coal"] = {},
-		["stone"] = {}
-	}
-	for i, t in pairs(game.surfaces[1].find_tiles_filtered{area = area, name = {"water", "deepwater"}}) do
-		output["water"][i] = { t.position.x, t.position.y }
-	end
+function write_resrc(area)
+	ids = { ["iron-ore"] = 1, ["copper-ore"] = 2, ["coal"] = 3, ["stone"] = 4, ["uranium-ore"] = 5 }
+	output = {{},{},{},{},{},{}}
 	for i, e in pairs(game.surfaces[1].find_entities_filtered{area = area, type="resource"}) do
-		table.insert(output[e.name], {e.position.x, e.position.y, e.amount})
+		table.insert(output[ids[e.name]], {x = e.position.x, y = e.position.y, a = e.amount})
 	end
-	game.write_file("world.json", game.table_to_json(output))
-	game.print("world export done")
+	game.write_file("resrc.json", game.table_to_json(output))
+	game.print("resources export done")
+end
+
+function write_water(area)
+	output = {}
+	for i, t in pairs(game.surfaces[1].find_tiles_filtered{area = area, name = {"water", "deepwater"}}) do
+		output[i] = { t.position.x, t.position.y }
+	end
+	game.write_file("water.json", game.table_to_json(output))
+	game.print("water export done")
 end
 
 function write_trees(area)
@@ -106,10 +107,6 @@ function write_state()
 	game.write_file("state.json", game.table_to_json(state) .. "\n")
 end
 
-function craft(recipe, count)
-	rcon.print(p.begin_crafting{recipe=recipe, count=count})
-end
-
 --- ================== ---
 --- ===  COMMANDS  === ---
 --- ================== ---
@@ -125,18 +122,10 @@ commands.add_command("walkto", nil, function(command)
 	walking_to = args
 end)
 
-commands.add_command("writeworld", nil, function(command)
-	write_world(game.json_to_table(command.parameter))
-end)
-
-commands.add_command("writetrees", nil, function(command)
-	area = game.json_to_table(command.parameter)
-	write_trees(area)
-end)
-
-commands.add_command("writerocks", nil, function(command)
-	write_rocks()
-end)
+commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)
+commands.add_command("writewater", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
+commands.add_command("writetrees", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
+commands.add_command("writerocks", nil, function(command) write_rocks(                                     ) end)
 
 commands.add_command("mine", nil, function(command)
 	local a = game.json_to_table(command.parameter)
@@ -144,7 +133,7 @@ commands.add_command("mine", nil, function(command)
 		game.print("wrong input: " .. command.parameter)
 		return
 	end
-	mining_target = surface.find_entities_filtered{limit=1,position = a, radius = 2.0}[1]
+	mining_target = surface.find_entities_filtered{limit=1,position = a, radius = 1.0}[1]
 	if mining_target == nil then
 		game.print("mine target entity not found")
 		return
@@ -171,7 +160,7 @@ commands.add_command("craft", nil, function(command)
 		game.print("wrong input: " .. command.parameter)
 		return
 	end
-	craft(a.recipe, a.count)
+	p.begin_crafting{recipe=a.recipe, count=a.count}
 end)
 
 --- ================ ---
