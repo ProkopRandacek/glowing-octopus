@@ -20,9 +20,10 @@ func main() {
 		return
 	}
 
-	trees, _ := bot.getTrees(Box{Position{-100, -100}, Position{100, 100}})
+	bot.getWorld(Box{Position{-100, -100}, Position{100, 100}})
+	/*trees, _ := bot.getTrees(Box{Position{-100, -100}, Position{100, 100}})
 	target := Position{trees[0][0], trees[0][1]}
 	bot.walkTo(target)
 	bot.waitForTaskDone()
-	bot.mine(target)
+	bot.mine(target)*/
 }

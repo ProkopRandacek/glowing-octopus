@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"time"
 )
@@ -47,15 +47,21 @@ func (b *Bot) getWorld(box Box) (RawWorld, error) {
 
 	for { // wait until the file is written
 		_, err := os.Stat(worldFilename)
-		if os.IsNotExist(err) {
-			fmt.Println("Waiting for the world.json to be generated...")
-			time.Sleep(time.Second)
-		} else if err == nil {
+		if err == nil {
 			break
 		}
+
+		log("Waiting for the world.json to be generated")
+		time.Sleep(time.Second)
 	}
 
-	dat, err := ioutil.ReadFile(worldFilename)
+	f, err := os.Open(worldFilename)
+	if err != nil {
+		return RawWorld{}, err
+	}
+	defer f.Close()
+
+	dat, err := io.ReadAll(f)
 	if err != nil {
 		return RawWorld{}, err
 	}
@@ -75,15 +81,21 @@ func (b *Bot) getTrees(box Box) ([][]float64, error) {
 
 	for { // wait until the file is written
 		_, err := os.Stat(treesFilename)
-		if os.IsNotExist(err) {
-			fmt.Println("Waiting for the trees.json to be generated...")
-			time.Sleep(time.Second)
-		} else if err == nil {
+		if err == nil {
 			break
 		}
+
+		log("Waiting for the trees.json to be generated")
+		time.Sleep(time.Second)
 	}
 
-	dat, err := ioutil.ReadFile(treesFilename)
+	f, err := os.Open(treesFilename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	dat, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}

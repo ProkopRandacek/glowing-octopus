@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gtaylor/factorio-rcon"
-	"io/ioutil"
+	"io"
+	"os"
 )
 
 type State struct { // Lua bot internal representation
@@ -37,7 +38,14 @@ func newBot(address, password string) (Bot, error) {
 }
 
 func (b *Bot) refreshState() {
-	dat, err := ioutil.ReadFile("./master/script-output/state.json")
+	f, err := os.Open("./master/script-output/state.json")
+	if f != nil {
+		fmt.Println("Error reading state file: ", err)
+		return
+	}
+	defer f.Close()
+
+	dat, err := io.ReadAll(f)
 	if err != nil {
 		fmt.Println("Error reading state file: ", err)
 		return
