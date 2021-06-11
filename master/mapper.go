@@ -5,14 +5,14 @@ import (
 )
 
 type ResourceMaps struct {
-	iron          []Position
-	copper        []Position
-	stone         []Position
-	coal          []Position
-	ironPatches   []Box
-	copperPatches []Box
-	stonePatches  []Box
-	coalPatches   []Box
+	Iron          []Position
+	Copper        []Position
+	Stone         []Position
+	Coal          []Position
+	IronPatches   []Box
+	CopperPatches []Box
+	StonePatches  []Box
+	CoalPatches   []Box
 }
 
 type Area struct {
@@ -20,7 +20,16 @@ type Area struct {
 	Id   int
 }
 
-var allocIdCounter = 0
+type Mapper struct {
+	Areas          []Area // marks what areas area allocated
+	AllocIdCounter int    // for area id generation
+	MallMap        map[string]Position
+	AllocMap       []Box
+	WaterTiles     []Position // the exact tiles that are in water
+	WaterBox       Box        // water boxes for fast intersection check
+	ResMaps        ResourceMaps
+	OrePatches     map[string][]Box
+}
 
 func CalcBoxes(tiles []Position) (boxes []Box) {
 	pos := Position{}
@@ -55,44 +64,54 @@ func CalcBoxes(tiles []Position) (boxes []Box) {
 }
 
 func (rm *ResourceMaps) CalcPatches() {
-	rm.ironPatches = CalcBoxes(rm.iron)
-	rm.copperPatches = CalcBoxes(rm.copper)
-	rm.stonePatches = CalcBoxes(rm.stone)
-	rm.coalPatches = CalcBoxes(rm.coal)
-}
-
-type Mapper struct {
-	Areas      []Area // marks what areas area allocated
-	mallMap    map[string]Position
-	allocMap   []Box
-	waterTiles []Position // the exact tiles that are in water
-	waterBox   Box        // water boxes for fast intersection check
-	resMaps    ResourceMaps
-	orePatches map[string][]Box
+	rm.IronPatches = CalcBoxes(rm.Iron)
+	rm.CopperPatches = CalcBoxes(rm.Copper)
+	rm.StonePatches = CalcBoxes(rm.Stone)
+	rm.CoalPatches = CalcBoxes(rm.Coal)
 }
 
 func (m *Mapper) readRawWorld(rw RawWorld) {
-	m.waterTiles = make([]Position, len(rw.Water))
-	m.resMaps.iron = make([]Position, len(rw.Iron))
-	m.resMaps.copper = make([]Position, len(rw.Copper))
-	m.resMaps.stone = make([]Position, len(rw.Stone))
-	m.resMaps.coal = make([]Position, len(rw.Coal))
+	m.WaterTiles = make([]Position, len(rw.Water))
+	m.ResMaps.Iron = make([]Position, len(rw.Iron))
+	m.ResMaps.Copper = make([]Position, len(rw.Copper))
+	m.ResMaps.Stone = make([]Position, len(rw.Stone))
+	m.ResMaps.Coal = make([]Position, len(rw.Coal))
 	for i, t := range rw.Water {
-		m.waterTiles[i] = Position{t[0], t[1]}
+		m.WaterTiles[i] = Position{t[0], t[1]}
 	}
 	for i, t := range rw.Iron {
-		m.resMaps.iron[i] = Position{t[0], t[1]}
+		m.ResMaps.Iron[i] = Position{t[0], t[1]}
 	}
 	for i, t := range rw.Copper {
-		m.resMaps.copper[i] = Position{t[0], t[1]}
+		m.ResMaps.Copper[i] = Position{t[0], t[1]}
 	}
 	for i, t := range rw.Stone {
-		m.resMaps.stone[i] = Position{t[0], t[1]}
+		m.ResMaps.Stone[i] = Position{t[0], t[1]}
 	}
 	for i, t := range rw.Coal {
-		m.resMaps.coal[i] = Position{t[0], t[1]}
+		m.ResMaps.Coal[i] = Position{t[0], t[1]}
 	}
-	m.resMaps.CalcPatches()
+	m.ResMaps.CalcPatches()
+}
+
+// for when you get new world chunk and want to add the infomation to the mapper
+func (m *Mapper) addRawWorld(rw RawWorld) {
+	for _, t := range rw.Water {
+		m.WaterTiles = append(m.WaterTiles, Position{t[0], t[1]})
+	}
+	for _, t := range rw.Iron {
+		m.ResMaps.Iron = append(m.ResMaps.Iron, Position{t[0], t[1]})
+	}
+	for _, t := range rw.Copper {
+		m.ResMaps.Copper = append(m.ResMaps.Copper, Position{t[0], t[1]})
+	}
+	for _, t := range rw.Stone {
+		m.ResMaps.Stone = append(m.ResMaps.Stone, Position{t[0], t[1]})
+	}
+	for _, t := range rw.Coal {
+		m.ResMaps.Coal = append(m.ResMaps.Coal, Position{t[0], t[1]})
+	}
+	m.ResMaps.CalcPatches() // patches need to be recalculated
 }
 
 // returns true, if dims is available
@@ -113,10 +132,10 @@ func (m *Mapper) alloc(dims Box) int {
 		return -1
 	}
 
-	m.Areas = append(m.Areas, Area{dims, allocIdCounter})
-	allocIdCounter++
+	m.Areas = append(m.Areas, Area{dims, m.AllocIdCounter})
+	m.AllocIdCounter++
 
-	return allocIdCounter - 1
+	return m.AllocIdCounter - 1
 }
 
 // frees area by id. Returns true, if successful
@@ -127,6 +146,5 @@ func (m *Mapper) free(id int) bool {
 			return true
 		}
 	}
-
 	return false
 }

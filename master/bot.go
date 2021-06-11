@@ -1,27 +1,48 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gtaylor/factorio-rcon"
+	"io/ioutil"
 )
+
+type State struct { // Lua bot internal representation
+	Pos     Position `json:"position"`
+	Walking bool     `json:"walking_state"`
+}
 
 type Bot struct {
 	conn   *rcon.RCON
 	mapper Mapper
+	State  State
 }
 
 func newBot(address, password string) (Bot, error) {
-	out := Bot{}
+	bot := Bot{}
 
 	var err error
-	out.conn, err = rcon.Dial(address)
+	bot.conn, err = rcon.Dial(address)
 	if err != nil {
-		return out, err
+		return bot, err
 	}
 
-	err = out.conn.Authenticate(password)
+	err = bot.conn.Authenticate(password)
 	if err != nil {
-		return out, err
+		return bot, err
 	}
 
-	return out, nil
+	return bot, nil
+}
+
+func (b *Bot) refreshState() {
+	dat, err := ioutil.ReadFile("./master/script-output/state.json")
+	if err != nil {
+		fmt.Println("Error reading state file: ", err)
+		return
+	}
+
+	newState := State{}
+	json.Unmarshal(dat, &newState)
+	b.State = newState
 }

@@ -93,6 +93,14 @@ function write_rocks() -- the ammount of rocks is tiny, this function can export
 	game.print("rocks export done")
 end
 
+function write_state()
+	state = {
+		["walking_state"] = walking_state.walking,
+		["position"] = p.position
+	}
+	game.write_file("state.json", game.table_to_json(state) .. "\n")
+end
+
 function craft(recipe, count)
 	rcon.print(p.begin_crafting{recipe=recipe, count=count})
 end
@@ -108,6 +116,7 @@ commands.add_command("walkto", nil, function(command)
 		return
 	end
 	walking_state = get_dir(args.x, args.y) -- this sets the walking state to true
+	write_state()
 	walking_to = args
 end)
 
@@ -164,4 +173,8 @@ script.on_event(defines.events.on_tick, function(event)
 			game.print("walking done")
 		end
 	end
+end)
+
+script.on_nth_tick(60, function(event) -- update state once per second
+	write_state()
 end)

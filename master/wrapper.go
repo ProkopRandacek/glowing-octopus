@@ -21,8 +21,21 @@ type RawWorld struct {
 }
 
 func (b *Bot) walkTo(x, y int) error {
+	b.State.Walking = true
 	_, err := b.conn.Execute(fmt.Sprintf(`/walkto {"x":%d,"y":%d}`, x, y))
 	return err
+}
+
+func (b *Bot) waitForWalkDone() {
+	for {
+		time.Sleep(2 * time.Second)
+		b.refreshState()
+		if b.State.Walking {
+			fmt.Println("Waiting for walk done")
+		} else {
+			break
+		}
+	}
 }
 
 func (b *Bot) getWorld(box Box) (RawWorld, error) {
