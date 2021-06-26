@@ -14,7 +14,7 @@ const (
 
 func (b *Bot) walkTo(p Position) error {
 	b.State.Walking = true
-	_, err := b.conn.Execute(fmt.Sprintf(`/walkto {"x":%.2f,"y":%.2f}`, p.X, p.Y))
+	_, err := b.conn.Execute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
 	return err
 }
 
