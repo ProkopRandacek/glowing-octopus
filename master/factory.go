@@ -45,16 +45,21 @@ func (b *Bot) newFactory(item Item, ps float32) {
 
 	bp := noFluidBp
 
-	out := make([]Building, int(float64(asmCount)*bp.Dims.X*bp.Dims.Y))
+	out := make([]Building, asmCount * len(bp.Buildings))
 
-	for i := 0; i < asmCount; i++ {
+	bCount := 0
+	for i:=0; i < asmCount; i++ {
 		for j, b := range bp.Buildings {
 			b.Pos.Y += bp.Dims.Y * float64(i)
-			out[i*int(bp.Dims.X) + j] = b
+			out[bCount] = b
+
+			if j == 0 {
+				out[bCount].CraftItem = item.Name
+			}
+
+			bCount++
 		}
 	}
-
-	out[0].CraftItem = item.Name
 
 	fmt.Println(out)
 }
