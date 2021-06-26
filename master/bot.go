@@ -6,6 +6,8 @@ import (
 	"github.com/gtaylor/factorio-rcon"
 	"io"
 	"os"
+	"container/list"
+	"errors"
 )
 
 type State struct { // Lua bot internal representation
@@ -14,10 +16,13 @@ type State struct { // Lua bot internal representation
 	Mining  bool     `json:"mining_state"`
 }
 
+type Task func(*Bot) error
+
 type Bot struct {
 	conn   *rcon.RCON
 	Mapper Mapper
 	State  State
+	TaskList *list.List
 }
 
 func newBot(address, password string) (Bot, error) {
@@ -37,6 +42,8 @@ func newBot(address, password string) (Bot, error) {
 	bot.Mapper = Mapper{}
 	bot.Mapper.Resrcs = make([][]Position, 4)
 	bot.Mapper.OrePatches = make([][]OrePatch, 4)
+
+	bot.TaskList = list.New()
 
 	return bot, nil
 }
@@ -58,4 +65,24 @@ func (b *Bot) refreshState() {
 	newState := State{}
 	json.Unmarshal(dat, &newState)
 	b.State = newState
+}
+
+func (b *Bot) addTask(t Task) {
+	b.TaskList.PushBack(t)
+}
+
+func (b *Bot) pushTask(t Task) {
+	b.TaskList.PushFront(t)
+}
+
+func (b *Bot) doTask() error {
+	if b.TaskList.Len() == 0 {
+		return errors.New("no tasks left")
+	}
+
+	err := b.TaskList.Front().Value.(Task)(b)
+	
+	b.TaskList.Remove(b.TaskList.Front())
+
+	return err
 }
