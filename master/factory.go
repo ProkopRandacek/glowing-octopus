@@ -33,17 +33,21 @@ type Building struct {
 }
 
 func (b *Bot) newFactory(item Item, ps float32) {
+	bp := noFluidBp
+	
 	for _, d := range item.Deps {
 		if d.MakeFactory {
 			b.newFactory(d.ItemStruct, ps*float32(d.Count))
+		}
+
+		if d.ItemStruct.Liquid {
+			bp = fluidBp
 		}
 	}
 
 	asmCount := int(math.Ceil(float64(ps * item.CraftTime)))
 
-	fmt.Printf("asm count for %s: %d\n", item.Name, asmCount)
-
-	bp := noFluidBp
+	//fmt.Printf("asm count for %s: %d\n", item.Name, asmCount)
 
 	out := make([]Building, asmCount * len(bp.Buildings))
 

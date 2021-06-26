@@ -19,6 +19,18 @@ Blueprint{
 				Position{3, 0},
 			},
 			Building{
+				"electric-pole",
+				up,
+				"",
+				Position{2, 2},
+			},
+			Building{
+				"electric-pole",
+				up,
+				"",
+				Position{6, 2},
+			},
+			Building{
 				"belt",
 				down,
 				"",
@@ -96,12 +108,29 @@ Blueprint{
 var fluidBp = 
 Blueprint{
 	Position{10, 3},
+/*
+  BBIASMIB
+PUBBUASM B
+M BBLASM B
+*/
 	[]Building{
 		Building{
 			"asm",
 			left,
 			"",
 			Position{5, 0},
+		},
+		Building{
+			"electric-pole",
+			up,
+			"",
+			Position{1, 0},
+		},
+		Building{
+			"electric-pole",
+			up,
+			"",
+			Position{8, 1},
 		},
 		Building{
 			"pipe",
