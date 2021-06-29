@@ -2,6 +2,9 @@ require("util")
 
 local instant_mine = false
 
+local tick = 0
+local inited = false
+
 local walking_state = {walking = false} --  what direction we are walking and if were walking
 local walking_to = {} -- the position that were walking to
 
@@ -228,13 +231,38 @@ commands.add_command("craft", nil, function(command)
 	bot.begin_crafting{recipe=a.recipe, count=a.count}
 end)
 
+--commands.add_command("callfbotinit", nil, init)
+
 --- ================ ---
 --- ===  EVENTS  === ---
 --- ================ ---
 
+
+function init()
+	surface = game.surfaces[1]
+
+	if global.fbot == nil then
+		game.print("no fbots found. Imma create it")
+		bot = surface.create_entity{
+			name="character",
+			position={0, 0},
+			direction=0,
+			force="player",
+			fast_replace=true,
+			create_build_effect_smoke=true
+		}
+		global.fbot = bot
+	else
+		game.print("fbot already exists imma use it")
+		bot = global.fbot
+	end
+	game.print("init done")
+	inited = true
+end
+
 script.on_event(defines.events.on_tick, function(event)
-	bot = game.players[1];
-	surface = game.surfaces[1];
+	if tick == 0 then init() end
+	tick = tick + 1
 
 	if walking_state.walking then -- update player walking state
 		bot.walking_state = walking_state
@@ -246,10 +274,20 @@ script.on_event(defines.events.on_tick, function(event)
 	elseif mining then
 		if instant_mine then
 			result = bot.mine_entity(mining_target, true)
-			if result == false then game.print("failed to mine " .. mining_target.type .. " " .. mining_target.name) end
+			if result == false then
+				game.print("failed to mine " .. mining_target.type .. " " .. mining_target.name)
+			else
+				mining = false
+				game.print("mining done")
+			end
 		else
-			bot.update_selected_entity(mining_target.position)
-			bot.mining_state = {mining = true, position = mining_target.position}
+			if mining_target.valid then
+				bot.update_selected_entity(mining_target.position)
+				bot.mining_state = {mining = true, position = mining_target.position}
+			else
+				mining = false
+				game.print("mining done")
+			end
 		end
 	elseif building then
 		place(building_pos, building_item, building_dir)
@@ -257,7 +295,7 @@ script.on_event(defines.events.on_tick, function(event)
 	elseif clearing then
 		clearing_target = game.surfaces[1].find_entities_filtered{area = clearing_area, type="tree", limit=1}[1]
 
-		if clearing_target == nil then -- if still no tree then clearing done
+		if clearing_target == nil then
 			clearing = false
 			game.print("clearing done")
 		else
@@ -268,12 +306,8 @@ script.on_event(defines.events.on_tick, function(event)
 end)
 
 script.on_nth_tick(60, function(event) -- update state once per second
-	bot = game.players[1];
-	write_state()
-end)
-
-script.on_event(defines.events.on_player_mined_entity, function(event)
-	mining = false
-	game.print("mining done")
+	if inited then
+		write_state()
+	end
 end)
 
