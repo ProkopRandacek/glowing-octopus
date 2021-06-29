@@ -6,16 +6,16 @@ import (
 )
 
 type RecipeDep struct {
-	ItemStruct Item
-	Count int
+	ItemStruct  Item
+	Count       int
 	MakeFactory bool
 }
 
 type Item struct {
-	Name string
+	Name      string
 	CraftTime float32 // craft_time / craft_amount
-	Liquid bool
-	Deps []RecipeDep
+	Liquid    bool
+	Deps      []RecipeDep
 }
 
 const (
@@ -26,16 +26,16 @@ const (
 )
 
 type Building struct {
-	Name string `json:"name"`
-	Rotation int `json:"rotation"`
-	CraftItem string `json"craft_item"`
-	Pos Position `json:"pos"`
+	Name      string   `json:"name"`
+	Rotation  int      `json:"rotation"`
+	CraftItem string   `json"craft_item"`
+	Pos       Position `json:"pos"`
 }
 
 func (b *Bot) newFactory(item Item, ps float32) {
 	for _, d := range item.Deps {
 		if d.MakeFactory {
-			b.newFactory(d.ItemStruct, ps * float32(d.Count))
+			b.newFactory(d.ItemStruct, ps*float32(d.Count))
 		}
 	}
 
@@ -45,12 +45,12 @@ func (b *Bot) newFactory(item Item, ps float32) {
 
 	bp := twoItemBp
 
-	out := make([]Building, int(float64(asmCount) * bp.Dims.X * bp.Dims.Y))
+	out := make([]Building, int(float64(asmCount)*bp.Dims.X*bp.Dims.Y))
 
-	for i:=0; i < asmCount; i++ {
+	for i := 0; i < asmCount; i++ {
 		for j, b := range bp.Buildings {
 			b.Pos.Y += bp.Dims.Y * float64(i)
-			out[i*int(bp.Dims.X) + j] = b
+			out[i*int(bp.Dims.X)+j] = b
 			//fmt.Println(b)
 		}
 	}

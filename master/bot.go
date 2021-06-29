@@ -1,13 +1,13 @@
 package main
 
 import (
+	"container/list"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gtaylor/factorio-rcon"
 	"io"
 	"os"
-	"container/list"
-	"errors"
 )
 
 type State struct { // Lua bot internal representation
@@ -19,9 +19,9 @@ type State struct { // Lua bot internal representation
 type Task func(*Bot) error
 
 type Bot struct {
-	conn   *rcon.RCON
-	Mapper Mapper
-	State  State
+	conn     *rcon.RCON
+	Mapper   Mapper
+	State    State
 	TaskList *list.List
 }
 
@@ -81,7 +81,7 @@ func (b *Bot) doTask() error {
 	}
 
 	err := b.TaskList.Front().Value.(Task)(b)
-	
+
 	b.TaskList.Remove(b.TaskList.Front())
 
 	return err

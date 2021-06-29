@@ -12,7 +12,7 @@ Autonomous Factorio bot.
 - [ ] Rotate thing
 - [ ] Put item into a thing
 - [ ] Take item from a thing
-- [ ] Mine rocks & trees in an area
+- [x] Mine rocks & trees in an area
 - [ ] Explore area
 
 ## Go side:

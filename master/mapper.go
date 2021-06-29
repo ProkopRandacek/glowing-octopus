@@ -7,7 +7,7 @@ import (
 type OrePatch struct {
 	Dims   Box
 	Unsafe bool
-	Type int
+	Type   int
 }
 
 type Area struct {

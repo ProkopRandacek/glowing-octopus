@@ -10,7 +10,7 @@ local clearing = false
 local clearing_target = nil
 local clearing_area = nil
 
-local p; -- player
+local p;
 local surface;
 
 --- ============ ---
@@ -139,8 +139,31 @@ function clear(area)
 	end
 
 	clearing = true
+end
 
-	--mine(clearing_target.position)
+function build(pos, item, dir)
+	if p.get_item_count(item) == 0 then
+		game.print("cant build " .. item .. " because i dont have it")
+		return
+	end
+
+	-- Check if we can actually place the item at this tile
+	local placed = false
+
+	if p.can_place_entity{name=item, position=pos, direction=direction} then
+		if p.surface.can_fast_replace{name=item, position=pos, direction=dir, force="player"} then
+			placed = p.surface.create_entity{name=item, position=pos, direction=dir, force="player", fast_replace=true, player=p}
+		else
+			placed = p.surface.create_entity{name=item, position=pos, direction=dir, force="player"}
+		end
+	else
+		game.print("cannot place: " .. item .. " at " .. game.table_to_json(pos))
+		return false
+	end
+	if placed then
+		p.remove_item({name = item, count = 1})
+	end
+	return true
 end
 
 --- ================== ---
@@ -161,6 +184,12 @@ commands.add_command("cleararea", nil, function(command)
 	local a = game.json_to_table(command.parameter)
 	mark_area({r = 1, a = 0.05}, nil, a[1][1], a[1][2], a[2][1], a[2][2])
 	clear(a)
+end)
+
+commands.add_command("build", nil, function(command)
+	local a = game.json_to_table(command.parameter)
+	if a.dir == nil then a.dir = 0 end
+	build(a.pos, a.item, a.dir)
 end)
 
 commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)

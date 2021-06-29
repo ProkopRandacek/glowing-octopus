@@ -2,8 +2,19 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"math"
+	"time"
+)
+
+const (
+	dirNorth     = 0
+	dirNorthEast = 1
+	dirEast      = 2
+	dirSouthEast = 3
+	dirSouth     = 4
+	dirSouthWest = 5
+	dirWest      = 6
+	dirNorthWest = 7
 )
 
 type Color struct {
