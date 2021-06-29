@@ -15,10 +15,10 @@ local clearing = false
 local clearing_target = nil
 local clearing_area = nil
 
-local building = false
-local building_item = nil
-local building_pos = nil
-local building_dir = nil
+local placing = false
+local placing_item = nil
+local placing_pos = nil
+local placing_dir = nil
 
 local bot;
 local surface;
@@ -144,7 +144,7 @@ end
 function clear(area)
 	clearing_area = area
 
-	clearing_targets = bot.surface.find_entities_filtered{area=clearing_area, type="tree", limit=2}
+	clearing_targets = bot.surface.find_entities_filtered{area=clearing_area, type="tree", limit=1}
 	if #clearing_targets == 0 then
 		game.print("nothing to clear")
 		return
@@ -159,11 +159,11 @@ function place(pos, item, dir) -- just place it
 	-- Check if we can actually place the item at this tile
 	local placed = false
 
-	if bot.can_place_entity{name=item, position=pos, direction=direction} then
-		if bot.surface.can_fast_replace{name=item, position=pos, direction=dir, force="player"} then
-			placed = bot.surface.create_entity{name=item, position=pos, direction=dir, force="player", fast_replace=true, player=p}
+	if surface.can_place_entity{name=item, position=pos, direction=direction} then
+		if surface.can_fast_replace{name=item, position=pos, direction=dir, force="player"} then
+			placed = surface.create_entity{name=item, position=pos, direction=dir, force="player", fast_replace=true, player=p}
 		else
-			placed = bot.surface.create_entity{name=item, position=pos, direction=dir, force="player"}
+			placed = surface.create_entity{name=item, position=pos, direction=dir, force="player"}
 		end
 	else
 		game.print("cannot place: " .. item .. " at " .. game.table_to_json(pos))
@@ -176,18 +176,18 @@ function place(pos, item, dir) -- just place it
 	return true
 end
 
-function build(pos, item, dir) -- walk there and then place it
+function place_safe(pos, item, dir) -- walk there and then place it
 	if bot.get_item_count(item) == 0 then
-		game.print("cant build " .. item .. " because i dont have it")
+		game.print("cant place " .. item .. " because i dont have it")
 		return
 	end
 
 	walkto(pos)
 
-	building = true
-	building_item = item
-	building_pos = pos
-	building_dir = dir
+	placing = true
+	placing_item = item
+	placing_pos = pos
+	placing_dir = dir
 end
 
 --- ================== ---
@@ -210,10 +210,10 @@ commands.add_command("cleararea", nil, function(command)
 	clear(a)
 end)
 
-commands.add_command("build", nil, function(command)
+commands.add_command("place", nil, function(command)
 	local a = game.json_to_table(command.parameter)
 	if a.dir == nil then a.dir = 0 end
-	build(a.pos, a.item, a.dir)
+	place_safe(a.pos, a.item, a.dir)
 end)
 
 commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)
@@ -231,8 +231,6 @@ commands.add_command("craft", nil, function(command)
 	bot.begin_crafting{recipe=a.recipe, count=a.count}
 end)
 
---commands.add_command("callfbotinit", nil, init)
-
 --- ================ ---
 --- ===  EVENTS  === ---
 --- ================ ---
@@ -242,15 +240,17 @@ function init()
 	surface = game.surfaces[1]
 
 	if global.fbot == nil then
-		game.print("no fbots found. Imma create it")
+		game.print("no fbot found. Imma create it")
 		bot = surface.create_entity{
 			name="character",
 			position={0, 0},
 			direction=0,
 			force="player",
-			fast_replace=true,
-			create_build_effect_smoke=true
+			fast_replace=true
 		}
+		bot.insert({name="burner-mining-drill", count=1}) -- the starting inventory
+		bot.insert({name="stone-furnace", count=1})
+		bot.color = {r=1, g=1, b=1}
 		global.fbot = bot
 	else
 		game.print("fbot already exists imma use it")
@@ -263,6 +263,12 @@ end
 script.on_event(defines.events.on_tick, function(event)
 	if tick == 0 then init() end
 	tick = tick + 1
+
+	bot.color = {
+		r=(math.sin(tick / 10.0) * 0.5 + 0.5) * 255.0,
+		g=(math.cos(tick / 20.0) * 0.5 + 0.5) * 255.0,
+		b=(math.sin(tick / 30.0) * 0.5 + 0.5) * 255.0
+	}
 
 	if walking_state.walking then -- update player walking state
 		bot.walking_state = walking_state
@@ -289,9 +295,9 @@ script.on_event(defines.events.on_tick, function(event)
 				game.print("mining done")
 			end
 		end
-	elseif building then
-		place(building_pos, building_item, building_dir)
-		building = false
+	elseif placing then
+		place(placing_pos, placing_item, placing_dir)
+		placing = false
 	elseif clearing then
 		clearing_target = game.surfaces[1].find_entities_filtered{area = clearing_area, type="tree", limit=1}[1]
 

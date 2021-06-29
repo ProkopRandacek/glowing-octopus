@@ -6,16 +6,16 @@ import (
 )
 
 type RecipeDep struct {
-	ItemStruct  Item
-	Count       int
+	ItemName    string `json:"name"`
+	Count       int    `json:"count"`
 	MakeFactory bool
 }
 
 type Item struct {
-	Name      string
-	CraftTime float32 // craft_time / craft_amount
-	Liquid    bool
-	Deps      []RecipeDep
+	Name      string  `json:"name"`
+	CraftTime float32 `json:"craftTime"` // craft_time / craft_amount
+	Liquid    bool `json:"liquid"`
+	Deps      []RecipeDep `json:"deps"`
 }
 
 const (
