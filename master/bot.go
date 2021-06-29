@@ -28,7 +28,11 @@ type Bot struct {
 func newBot(address, password string) (Bot, error) {
 	bot := Bot{}
 
-	var err error
+	err := loadRecipes()
+	if err != nil {
+		return bot, err
+	}
+
 	bot.conn, err = rcon.Dial(address)
 	if err != nil {
 		return bot, err

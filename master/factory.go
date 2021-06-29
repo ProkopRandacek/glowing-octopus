@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"errors"
 	"math"
+	"io"
+	"os"
+	"encoding/json"
 )
 
+var recipes map[string]Item
+
 type RecipeDep struct {
-	ItemName    string `json:"name"`
+	Name    string `json:"name"`
 	Count       int    `json:"count"`
 	MakeFactory bool
 }
@@ -32,27 +38,49 @@ type Building struct {
 	Pos       Position `json:"pos"`
 }
 
-func (b *Bot) newFactory(item Item, ps float32) {
-	bp := noFluidBp
+func loadRecipes() error {
+	f, err := os.Open("./master/recipes.json")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 	
-	for _, d := range item.Deps {
-		if d.MakeFactory {
-			b.newFactory(d.ItemStruct, ps*float32(d.Count))
-		}
+	dat, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
 
-		if d.ItemStruct.Liquid {
+	err = json.Unmarshal(dat, &recipes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Bot) newFactory(itemStr string, ps float32) error {
+	bp := noFluidBp
+	item, exists := recipes[itemStr]
+	if !exists {
+		return errors.New("unknown item " + itemStr)
+	}
+
+	for _, d := range item.Deps {
+		//if d.MakeFactory { TODO
+		b.newFactory(d.Name, ps*float32(d.Count))
+		//}
+
+		if recipes[d.Name].Liquid {
 			bp = fluidBp
 		}
 	}
 
-	asmCount := int(math.Ceil(float64(ps * item.CraftTime)))
-
-	//fmt.Printf("asm count for %s: %d\n", item.Name, asmCount)
+	asmCount := int(math.Ceil(float64(ps * item.CraftTime))) // count of assemblers needed
 
 	out := make([]Building, asmCount * len(bp.Buildings))
 
-	bCount := 0
-	for i:=0; i < asmCount; i++ {
+	bCount := 0 // count of building placed
+	for i := 0; i < asmCount; i++ {
 		for j, b := range bp.Buildings {
 			b.Pos.Y += bp.Dims.Y * float64(i)
 			out[bCount] = b
@@ -66,4 +94,6 @@ func (b *Bot) newFactory(item Item, ps float32) {
 	}
 
 	fmt.Println(out)
+
+	return nil
 }

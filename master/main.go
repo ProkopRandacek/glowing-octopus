@@ -18,28 +18,9 @@ func main() {
 	bot, err := newBot(addr, pass)
 	if err != nil {
 		fmt.Println("could not initialize bot")
-		return
+		fmt.Println(err.Error())
+		//return
 	}
 
-	bot.addTask(func(b *Bot) error {
-		b.walkTo(Position{10, 10})
-		b.waitForTaskDone()
-		return nil
-	})
-	bot.addTask(func(b *Bot) error {
-		b.walkTo(Position{-10, -10})
-		b.waitForTaskDone()
-		return nil
-	})
-	bot.pushTask(func(b *Bot) error {
-		fmt.Println("start")
-		return nil
-	})
-	bot.addTask(func(b *Bot) error {
-		fmt.Println("done")
-		return nil
-	})
-
-	for bot.doTask() == nil {
-	}
+	bot.newFactory("inserter", 20)
 }
