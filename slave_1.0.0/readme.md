@@ -1,3 +1,4 @@
-This mod only blindly executes the master commands.  
+This mod only blindly executes the rcon commands.  
   
-To make things simpler, the player has no collision and can walk over and on anything. I don't think that it is that much cheating.
+Pathfinding in Factorio is a hard and in this case not that interesting problem. Because of that, I disabled players colision and make the player walk in straight lines to the goal.
+
