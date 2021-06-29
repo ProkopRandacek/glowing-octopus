@@ -18,12 +18,12 @@ func (b *Bot) walkTo(p Position) error {
 	return err
 }
 
-func (b *Bot) waitForTaskDone() { // Waits until taks is done. Can be waiting for mining or walking taks to finish.
+func (b *Bot) waitForTaskDone() { // Waits until task is done.
 	for {
 		fmt.Println("Waiting for task done")
 		time.Sleep(2 * time.Second)
 		b.refreshState()
-		if !b.State.Walking && !b.State.Mining {
+		if !(b.State.Walking || b.State.Mining || b.State.Clearing || b.State.Building) {
 			break
 		}
 	}

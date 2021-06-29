@@ -20,6 +20,8 @@ local placing_item = nil
 local placing_pos = nil
 local placing_dir = nil
 
+local building = false
+
 local bot;
 local surface;
 
@@ -114,9 +116,12 @@ end
 
 function write_state()
 	state = {
+		["position"] = bot.position,
 		["walking_state"] = walking_state.walking,
 		["mining_state"] = mining,
-		--["position"] = game.players[1].position
+		["placing_state"] = placing,
+		["clearing_state"] = clearing,
+		["building_state"] = building
 	}
 	game.write_file("state.json", game.table_to_json(state) .. "\n")
 end
@@ -263,6 +268,7 @@ end
 script.on_event(defines.events.on_tick, function(event)
 	if tick == 0 then init() end
 	tick = tick + 1
+	if not inited then return end
 
 	bot.color = {
 		r=(math.sin(tick / 10.0) * 0.5 + 0.5) * 255.0,
@@ -312,8 +318,6 @@ script.on_event(defines.events.on_tick, function(event)
 end)
 
 script.on_nth_tick(60, function(event) -- update state once per second
-	if inited then
-		write_state()
-	end
+	if inited then write_state() end
 end)
 

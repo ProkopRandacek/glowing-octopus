@@ -11,9 +11,11 @@ import (
 )
 
 type State struct { // Lua bot internal representation
-	Pos     Position `json:"position"`
-	Walking bool     `json:"walking_state"`
-	Mining  bool     `json:"mining_state"`
+	Pos      Position `json:"position"`
+	Walking  bool     `json:"walking_state"`
+	Mining   bool     `json:"mining_state"`
+	Clearing bool     `json:"clearing_state"`
+	Building bool     `json:"building_state"`
 }
 
 type Task func(*Bot) error
