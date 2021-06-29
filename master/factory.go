@@ -1,26 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"errors"
-	"math"
-	"io"
-	"os"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"os"
 )
 
 var recipes map[string]Item
 
 type RecipeDep struct {
-	Name    string `json:"name"`
+	Name        string `json:"name"`
 	Count       int    `json:"count"`
 	MakeFactory bool
 }
 
 type Item struct {
-	Name      string  `json:"name"`
-	CraftTime float32 `json:"craftTime"` // craft_time / craft_amount
-	Liquid    bool `json:"liquid"`
+	Name      string      `json:"name"`
+	CraftTime float32     `json:"craftTime"` // craft_time / craft_amount
+	Liquid    bool        `json:"liquid"`
 	Deps      []RecipeDep `json:"deps"`
 }
 
@@ -44,7 +44,7 @@ func loadRecipes() error {
 		return err
 	}
 	defer f.Close()
-	
+
 	dat, err := io.ReadAll(f)
 	if err != nil {
 		return err

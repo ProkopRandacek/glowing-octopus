@@ -128,14 +128,18 @@ func (m *Mapper) readResources(r [][]Position) {
 }
 
 // returns true, if dims is available
-func (m *Mapper) canAlloc(dims Box) bool {
-	for _, a := range m.Areas {
-		d := a.Dims
+func (m *Mapper) canAlloc(b Box) bool {
+	for _, t := range m.Areas {
+		a := t.Dims
 
-		if d.Br.X >= dims.Tl.X && d.Br.Y >= dims.Tl.Y && d.Tl.X <= dims.Br.X && d.Tl.Y <= dims.Br.Y {
+		if !(b.Tl.X > a.Br.X ||
+			b.Br.X < a.Tl.X ||
+			b.Tl.Y > a.Br.Y ||
+			b.Br.Y < a.Tl.Y) {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -149,6 +153,44 @@ func (m *Mapper) alloc(dims Box) int {
 	m.AllocIdCounter++
 
 	return m.AllocIdCounter - 1
+}
+
+// Moves the box to a near place where it fits.
+func (m *Mapper) findSpace(dims *Box) {
+	side := 1
+
+	for {
+		for i := 0; i < side; i++ { // move right
+			if m.canAlloc(*dims) {
+				return
+			}
+			dims.Tl.X += 1
+			dims.Br.X += 1
+		}
+		for i := 0; i < side; i++ { // move down
+			if m.canAlloc(*dims) {
+				return
+			}
+			dims.Tl.Y += 1
+			dims.Br.Y += 1
+		}
+		side += 1
+		for i := 0; i < side; i++ { // move left
+			if m.canAlloc(*dims) {
+				return
+			}
+			dims.Tl.X -= 1
+			dims.Br.X -= 1
+		}
+		for i := 0; i < side; i++ { // move up
+			if m.canAlloc(*dims) {
+				return
+			}
+			dims.Tl.Y -= 1
+			dims.Br.Y -= 1
+		}
+		side += 1
+	}
 }
 
 // frees area by id. Returns true, if successful

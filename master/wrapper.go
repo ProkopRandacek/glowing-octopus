@@ -12,12 +12,6 @@ const (
 	scriptFolder = "./master/script-output/"
 )
 
-func (b *Bot) walkTo(p Position) error {
-	b.State.Walking = true
-	_, err := b.conn.Execute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
-	return err
-}
-
 func (b *Bot) waitForTaskDone() { // Waits until task is done.
 	for {
 		fmt.Println("Waiting for task done")
@@ -66,6 +60,12 @@ func (b *Bot) getResources(box Box) ([][]Position, error) {
 	return resrc, nil
 }
 
+func (b *Bot) walkTo(p Position) error {
+	b.State.Walking = true
+	_, err := b.conn.Execute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
+	return err
+}
+
 func (b *Bot) drawBox(box Box, color Color) {
 	b.conn.Execute(fmt.Sprintf(`/drawbox {"color":[%2.f, %2.f, %2.f, 0.2],"x1":%2.f,"y1":%2.f,"x2":%2.f,"y2":%2.f}`, color.R, color.G, color.B, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
@@ -76,6 +76,10 @@ func (b *Bot) craft(r string, c int) {
 
 func (b *Bot) mine(p Position) {
 	b.conn.Execute(fmt.Sprintf(`/mine [%.2f,%.2f]`, p.X, p.Y))
+}
+
+func (b *Bot) clearArea(box Box) {
+	b.conn.Execute(fmt.Sprintf(`/cleararea [[%2.f, %2.f],[%2.f, %2.f]]`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
 func (b *Bot) build(p Position, item string) {
