@@ -78,10 +78,10 @@ func (b *Bot) mine(p Position) {
 	b.conn.Execute(fmt.Sprintf(`/mine [%.2f,%.2f]`, p.X, p.Y))
 }
 
-func (b *Bot) place(p Position, item string) {
+func (b *Bot) build(p Position, item string) {
 	b.conn.Execute(fmt.Sprintf(`/build {"pos":[%2.f,%2.f],"item":"%s"}`, p.X, p.Y, item))
 }
 
-func (b *Bot) placeDir(p Position, item string, dir int) {
+func (b *Bot) buildDir(p Position, item string, dir int) {
 	b.conn.Execute(fmt.Sprintf(`/build {"pos":[%2.f,%2.f],"item":"%s","dir":%d}`, p.X, p.Y, item, dir))
 }

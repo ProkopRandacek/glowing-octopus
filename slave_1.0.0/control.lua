@@ -10,6 +10,11 @@ local clearing = false
 local clearing_target = nil
 local clearing_area = nil
 
+local building = false
+local building_item = nil
+local building_pos = nil
+local building_dir = nil
+
 local p;
 local surface;
 
@@ -141,12 +146,7 @@ function clear(area)
 	clearing = true
 end
 
-function build(pos, item, dir)
-	if p.get_item_count(item) == 0 then
-		game.print("cant build " .. item .. " because i dont have it")
-		return
-	end
-
+function place(pos, item, dir) -- just place it
 	-- Check if we can actually place the item at this tile
 	local placed = false
 
@@ -162,8 +162,23 @@ function build(pos, item, dir)
 	end
 	if placed then
 		p.remove_item({name = item, count = 1})
+		game.print("placed " .. item .. " at " .. game.table_to_json(pos))
 	end
 	return true
+end
+
+function build(pos, item, dir) -- walk there and then place it
+	if p.get_item_count(item) == 0 then
+		game.print("cant build " .. item .. " because i dont have it")
+		return
+	end
+
+	walkto(pos)
+
+	building = true
+	building_item = item
+	building_pos = pos
+	building_dir = dir
 end
 
 --- ================== ---
@@ -225,6 +240,9 @@ script.on_event(defines.events.on_tick, function(event)
 	elseif mining then
 		p.update_selected_entity(mining_target.position)
 		p.mining_state = {mining = true, position = mining_target.position}
+	elseif building then
+		place(building_pos, building_item, building_dir)
+		building = false
 	elseif clearing then
 		clearing_target = game.surfaces[1].find_entities_filtered{area = clearing_area, type="tree", limit=1}[1]
 
