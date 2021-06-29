@@ -6,7 +6,7 @@ Autonomous Factorio bot.
   - [ ] Fast map export
 - [x] Walk to x y
 - [x] Drawbox
-- [ ] Place thing
+- [x] Place thing
 - [x] Craft thing
 - [ ] Set recipe
 - [ ] Rotate thing

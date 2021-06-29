@@ -14,6 +14,7 @@ type State struct { // Lua bot internal representation
 	Pos      Position `json:"position"`
 	Walking  bool     `json:"walking_state"`
 	Mining   bool     `json:"mining_state"`
+	Placing  bool     `json:"placing_state"`
 	Clearing bool     `json:"clearing_state"`
 	Building bool     `json:"building_state"`
 }

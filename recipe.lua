@@ -29,26 +29,26 @@ fluids = {
 for i, t in pairs(data.table) do
 	items[i] = t.name
 
-	recipes[i] = {}
-	recipes[i].name = t.name
+	recipes[t.name] = {}
 	if fluids[t.name] == true then
-		recipes[i].fluid = true
+		recipes[t.name].fluid = true
 	else
-		recipes[i].fluid = false
+		recipes[t.name].fluid = false
 	end
 	if t.result_count == nil then t.result_count = 1 end
 	if t.energy_required == nil then t.energy_required = 0.5 end
-	recipes[i].craftTime = t.energy_required / t.result_count
+	recipes[t.name].craftTime = t.energy_required / t.result_count
 
-	recipes[i].deps = {}
+	recipes[t.name].deps = {}
 
+	has_recipe = true
 	if t.ingredients == nil then
 		t.ingredients = t.normal.ingredients
 	end
 	for ii, d in pairs(t.ingredients) do
-		recipes[i].deps[ii] = {}
-		recipes[i].deps[ii].name = d[1]
-		recipes[i].deps[ii].count = d[2]
+		recipes[t.name].deps[ii] = {}
+		recipes[t.name].deps[ii].name = d[1]
+		recipes[t.name].deps[ii].count = d[2]
 	end
 end
 

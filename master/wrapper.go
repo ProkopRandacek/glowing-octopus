@@ -23,7 +23,7 @@ func (b *Bot) waitForTaskDone() { // Waits until task is done.
 		fmt.Println("Waiting for task done")
 		time.Sleep(2 * time.Second)
 		b.refreshState()
-		if !(b.State.Walking || b.State.Mining || b.State.Clearing || b.State.Building) {
+		if !(b.State.Walking || b.State.Mining || b.State.Placing || b.State.Clearing || b.State.Building) {
 			break
 		}
 	}
