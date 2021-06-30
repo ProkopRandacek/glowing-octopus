@@ -164,15 +164,15 @@ function clear(area)
 	clearing = true
 end
 
-function place(pos, item, dir) -- just place it
+function place(pos, item, dir, recipe) -- just place it
 	-- Check if we can actually place the item at this tile
 	local placed = false
 
 	if surface.can_place_entity{name=item, position=pos, direction=direction} then
 		if surface.can_fast_replace{name=item, position=pos, direction=dir, force="player"} then
-			placed = surface.create_entity{name=item, position=pos, direction=dir, force="player", fast_replace=true, player=p}
+			placed = surface.create_entity{name=item, position=pos, direction=dir, recipe=recipe, force="player", fast_replace=true, player=bot}
 		else
-			placed = surface.create_entity{name=item, position=pos, direction=dir, force="player"}
+			placed = surface.create_entity{name=item, position=pos, direction=dir, recipe=recipe, force="player"}
 		end
 	else
 		game.print("cannot place: " .. item .. " at " .. game.table_to_json(pos))
@@ -185,7 +185,7 @@ function place(pos, item, dir) -- just place it
 	return true
 end
 
-function place_safe(pos, item, dir) -- walk there and then place it
+function place_safe(pos, item, dir, recipe) -- walk there and then place it
 	if bot.get_item_count(item) == 0 then
 		game.print("cant place " .. item .. " because i dont have it")
 		return
@@ -197,6 +197,7 @@ function place_safe(pos, item, dir) -- walk there and then place it
 	placing_item = item
 	placing_pos = pos
 	placing_dir = dir
+	placing_recipe = recipe
 end
 
 --- ================== ---
@@ -264,10 +265,20 @@ commands.add_command("craft", nil, function(command)
 	end
 end)
 
+commands.add_command("place", nil, function(command)
+	local a = game.json_to_table(command.parameter)
+	if a.dir == nil then a.dir = 0 end
+	place_safe(a.pos, a.item, a.dir, a.recipe) -- recipe can be also nil
+end)
+
+commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)
+commands.add_command("writewater", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
+commands.add_command("writetrees", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
+commands.add_command("writerocks", nil, function(command) write_rocks(                                     ) end)
+
 --- ================ ---
 --- ===  EVENTS  === ---
 --- ================ ---
-
 
 function init()
 	surface = game.surfaces[1]
@@ -330,8 +341,10 @@ script.on_event(defines.events.on_tick, function(event)
 			end
 		end
 	elseif placing then
-		place(placing_pos, placing_item, placing_dir)
+		place(placing_pos, placing_item, placing_dir, placing_recipe)
 		placing = false
+	elseif building then
+		-- todo
 	elseif clearing then
 		clearing_target = game.surfaces[1].find_entities_filtered{area = clearing_area, type="tree", limit=1}[1]
 
