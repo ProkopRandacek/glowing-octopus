@@ -25,6 +25,9 @@ type Bot struct {
 	conn     *rcon.RCON
 	Mapper   Mapper
 	TaskList *list.List
+	InserterLevel string
+	AssemblerLevel int
+	BeltLevel string
 }
 
 func newBot(address, password string) (Bot, error) {
@@ -50,6 +53,10 @@ func newBot(address, password string) (Bot, error) {
 	bot.Mapper.OrePatches = make([][]OrePatch, 4)
 
 	bot.TaskList = list.New()
+
+	bot.InserterLevel = "fast"
+	bot.AssemblerLevel = 1
+	bot.BeltLevel = ""
 
 	return bot, nil
 }

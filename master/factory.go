@@ -81,12 +81,26 @@ func (b *Bot) newFactory(itemStr string, ps float32) error {
 
 	bCount := 0 // count of building placed
 	for i := 0; i < asmCount; i++ {
-		for j, b := range bp.Buildings {
-			b.Pos.Y += bp.Dims.Y * float64(i)
-			out[bCount] = b
+		for j, building := range bp.Buildings {
+			building.Pos.Y += bp.Dims.Y * float64(i)
+			out[bCount] = building
 
 			if j == 0 {
 				out[bCount].CraftItem = item.Name
+				out[bCount].Name = fmt.Sprintf(out[bCount].Name, b.AssemblerLevel)
+			}
+
+			if out[bCount].Name == "inserter" && len(b.InserterLevel) > 0 {
+				out[bCount].Name = b.InserterLevel + "-inserter"
+			}
+
+			if out[bCount].Name == "belt" {
+				out[bCount].Name = ""
+				if len(b.BeltLevel) > 0 {
+					out[bCount].Name = b.BeltLevel + "-"
+				}
+
+				out[bCount].Name += "transport-belt"
 			}
 
 			bCount++

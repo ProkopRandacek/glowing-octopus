@@ -12,7 +12,7 @@ var noFluidBp = Blueprint{
 		//BBLASM B
 		//BB ASM B
 		Building{
-			"asm",
+			"assembling-machine-%d",
 			up,
 			"",
 			Position{3, 0},
@@ -113,7 +113,7 @@ var fluidBp = Blueprint{
 	*/
 	[]Building{
 		Building{
-			"asm",
+			"assembling-machine-%d",
 			left,
 			"",
 			Position{5, 0},
