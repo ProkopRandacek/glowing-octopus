@@ -145,7 +145,7 @@ function mine(pos)
 	game.print("mine at " .. game.table_to_json(pos))
 	walkto({pos[1] + 1.5, pos[2]})
 	mining = true
-	mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type={"player", "corpse", "character", "flying-text"}, invert=true}[1]
+	mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true}[1]
 	if mining_target == nil then
 		game.print("mine target entity not found")
 		return
@@ -158,7 +158,7 @@ function clear(area, t)
 
 	if clearing_type == "all" then
 		game.print("clearing all")
-		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text"}, invert=true, limit=1}
+		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true, limit=1}
 	elseif clearing_type == "nature" then
 		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"tree", "simple-entity"}, limit=1}
 	end
@@ -342,7 +342,7 @@ script.on_event(defines.events.on_tick, function(event)
 				game.print("mining done")
 			end
 		else
-			if mining_target.valid then
+			if mining_target ~= nil and mining_target.valid then
 				bot.update_selected_entity(mining_target.position)
 				bot.mining_state = {mining = true, position = mining_target.position}
 			else
@@ -368,7 +368,7 @@ script.on_event(defines.events.on_tick, function(event)
 	elseif clearing then
 		if clearing_type == "all" then
 			game.print("clearing all")
-			clearing_target = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text"}, invert=true, limit=1}[1]
+			clearing_target = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true, limit=1}[1]
 		elseif clearing_type == "nature" then
 			clearing_target = surface.find_entities_filtered{area=clearing_area, type="tree", limit=1}[1]
 		end
@@ -377,7 +377,7 @@ script.on_event(defines.events.on_tick, function(event)
 			clearing = false
 			game.print("clearing done")
 		else
-			game.print("found next thing to clear")
+			game.print("found next thing to clear. Its a " .. clearing_target.name)
 			mine({clearing_target.position.x, clearing_target.position.y})
 		end
 	end
