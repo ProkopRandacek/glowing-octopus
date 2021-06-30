@@ -14,6 +14,7 @@ local mining_target = nil
 local clearing = false
 local clearing_target = nil
 local clearing_area = nil
+local clearing_type = "nature" -- "nature" or "all"
 
 local placing = false
 local placing_item = nil
@@ -151,10 +152,16 @@ function mine(pos)
 	end
 end
 
-function clear(area)
+function clear(area, t)
 	clearing_area = area
+	clearing_type = t
 
-	clearing_targets = bot.surface.find_entities_filtered{area=clearing_area, type="tree", limit=1}
+	if clearing_type == "all" then
+		game.print("clearing all")
+		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text"}, invert=true, limit=1}
+	elseif clearing_type == "nature" then
+		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"tree", "simple-entity"}, limit=1}
+	end
 	if #clearing_targets == 0 then
 		game.print("nothing to clear")
 		return
@@ -233,8 +240,8 @@ commands.add_command("cleararea", nil, function(command)
 		game.print("im busy")
 	else
 		local a = game.json_to_table(command.parameter)
-		mark_area({r = 1, a = 0.05}, nil, a[1][1], a[1][2], a[2][1], a[2][2])
-		clear(a)
+		mark_area({r = 1, a = 0.05}, nil, a.area[1][1], a.area[1][2], a.area[2][1], a.area[2][2])
+		clear(a.area, a.t)
 	end
 end)
 
@@ -308,6 +315,10 @@ script.on_event(defines.events.on_tick, function(event)
 	tick = tick + 1
 	if not inited then return end
 
+	thing = surface.find_entities_filtered{position=game.players[1].position, radius=1, type={"character"}, invert=true, limit=1}[1]
+	if thing ~= nil then
+		game.print(thing.type .. " " .. thing.name)
+	end
 	bot.color = {
 		r=(math.sin(tick / 10.0) * 0.5 + 0.5) * 255.0,
 		g=(math.cos(tick / 20.0) * 0.5 + 0.5) * 255.0,
@@ -355,13 +366,18 @@ script.on_event(defines.events.on_tick, function(event)
 			end
 		end
 	elseif clearing then
-		clearing_target = game.surfaces[1].find_entities_filtered{area = clearing_area, type="tree", limit=1}[1]
+		if clearing_type == "all" then
+			game.print("clearing all")
+			clearing_target = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text"}, invert=true, limit=1}[1]
+		elseif clearing_type == "nature" then
+			clearing_target = surface.find_entities_filtered{area=clearing_area, type="tree", limit=1}[1]
+		end
 
 		if clearing_target == nil then
 			clearing = false
 			game.print("clearing done")
 		else
-			game.print("found next tree to clear")
+			game.print("found next thing to clear")
 			mine({clearing_target.position.x, clearing_target.position.y})
 		end
 	end

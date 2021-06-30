@@ -76,8 +76,12 @@ func (b *Bot) mine(p Position) {
 	b.conn.Execute(fmt.Sprintf(`/mine [%.2f,%.2f]`, p.X, p.Y))
 }
 
-func (b *Bot) clearArea(box Box) {
-	b.conn.Execute(fmt.Sprintf(`/cleararea [[%2.f, %2.f],[%2.f, %2.f]]`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+func (b *Bot) clearNature(box Box) {
+	b.conn.Execute(fmt.Sprintf(`/cleararea {"area":[[%2.f, %2.f],[%2.f, %2.f]],"t":"nature"}`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+}
+
+func (b *Bot) clearAll(box Box) {
+	b.conn.Execute(fmt.Sprintf(`/cleararea {"area":[[%2.f, %2.f],[%2.f, %2.f]],"t":"all"}`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
 func (b *Bot) place(p Position, item string) {
