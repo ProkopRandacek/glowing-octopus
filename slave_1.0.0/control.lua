@@ -57,6 +57,10 @@ function get_dir(x, y, eps) -- returns the direction from player position to {x.
 	end
 end
 
+function check_busy()
+	return not (inited and not (walking_state.walking or mining or clearing or placing or building))
+end
+
 --- =================== ---
 --- ===  FUNCTIONS  === ---
 --- =================== ---
@@ -199,41 +203,65 @@ end
 --- ===  COMMANDS  === ---
 --- ================== ---
 
-commands.add_command("walkto", nil, function(command)
-	local args = game.json_to_table(command.parameter)
-	walkto(args)
-end)
-
-commands.add_command("mine", nil, function(command)
-	local a = game.json_to_table(command.parameter)
-	mine(a)
-end)
-
-commands.add_command("cleararea", nil, function(command)
-	local a = game.json_to_table(command.parameter)
-	mark_area({r = 1, a = 0.05}, nil, a[1][1], a[1][2], a[2][1], a[2][2])
-	clear(a)
-end)
-
-commands.add_command("place", nil, function(command)
-	local a = game.json_to_table(command.parameter)
-	if a.dir == nil then a.dir = 0 end
-	place_safe(a.pos, a.item, a.dir)
-end)
-
 commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)
 commands.add_command("writewater", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
 commands.add_command("writetrees", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
 commands.add_command("writerocks", nil, function(command) write_rocks(                                     ) end)
 
+commands.add_command("walkto", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local args = game.json_to_table(command.parameter)
+		walkto(args)
+	end
+end)
+
+commands.add_command("mine", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		mine(a)
+	end
+end)
+
+commands.add_command("cleararea", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		mark_area({r = 1, a = 0.05}, nil, a[1][1], a[1][2], a[2][1], a[2][2])
+		clear(a)
+	end
+end)
+
+commands.add_command("place", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		if a.dir == nil then a.dir = 0 end
+		place_safe(a.pos, a.item, a.dir)
+	end
+end)
+
 commands.add_command("drawbox", nil, function(command)
-	local a = game.json_to_table(command.parameter)
-	mark_area(a.color, nil, a.x1, a.y1, a.x2, a.y2)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		mark_area(a.color, nil, a.x1, a.y1, a.x2, a.y2)
+	end
 end)
 
 commands.add_command("craft", nil, function(command)
-	local a = game.json_to_table(command.parameter)
-	bot.begin_crafting{recipe=a.recipe, count=a.count}
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		bot.begin_crafting{recipe=a.recipe, count=a.count}
+	end
 end)
 
 --- ================ ---
