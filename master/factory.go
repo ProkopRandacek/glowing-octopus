@@ -107,7 +107,8 @@ func (b *Bot) newFactory(itemStr string, ps float32) error {
 		}
 	}
 
-	fmt.Println(out)
+	t, _ := json.Marshal(out)
+	fmt.Println(string(t))
 
 	return nil
 }

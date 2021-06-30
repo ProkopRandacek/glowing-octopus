@@ -22,12 +22,12 @@ type State struct { // Lua bot internal representation
 type Task func(*Bot) error
 
 type Bot struct {
-	conn     *rcon.RCON
-	Mapper   Mapper
-	TaskList *list.List
-	InserterLevel string
+	conn           *rcon.RCON
+	Mapper         Mapper
+	TaskList       *list.List
+	InserterLevel  string
 	AssemblerLevel int
-	BeltLevel string
+	BeltLevel      string
 }
 
 func newBot(address, password string) (Bot, error) {

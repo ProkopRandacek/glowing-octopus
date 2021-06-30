@@ -80,14 +80,19 @@ func (b *Bot) clearArea(box Box) {
 	b.conn.Execute(fmt.Sprintf(`/cleararea [[%2.f, %2.f],[%2.f, %2.f]]`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
-func (b *Bot) build(p Position, item string) {
-	b.conn.Execute(fmt.Sprintf(`/build {"pos":[%2.f,%2.f],"item":"%s"}`, p.X, p.Y, item))
+func (b *Bot) place(p Position, item string) {
+	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s"}`, p.X, p.Y, item))
 }
 
-func (b *Bot) buildRecipe(p Position, item string, recipe string) {
-	b.conn.Execute(fmt.Sprintf(`/build {"pos":[%2.f,%2.f],"item":"%s","recipe":"%s"}`, p.X, p.Y, item, recipe))
+func (b *Bot) placeRecipe(p Position, item string, recipe string) {
+	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","recipe":"%s"}`, p.X, p.Y, item, recipe))
 }
 
-func (b *Bot) buildDir(p Position, item string, dir int) {
-	b.conn.Execute(fmt.Sprintf(`/build {"pos":[%2.f,%2.f],"item":"%s","dir":%d}`, p.X, p.Y, item, dir))
+func (b *Bot) placeDir(p Position, item string, dir int) {
+	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","dir":%d}`, p.X, p.Y, item, dir))
+}
+
+func (b *Bot) build(b []Building) {
+	s, _ := json.Marshal(b)
+	b.conn.Execute(fmt.Sprintf(`/build %s`, s))
 }

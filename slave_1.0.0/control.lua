@@ -21,6 +21,7 @@ local placing_pos = nil
 local placing_dir = nil
 
 local building = false
+local building_queue = nil
 
 local bot;
 local surface;
@@ -247,6 +248,15 @@ commands.add_command("place", nil, function(command)
 	end
 end)
 
+commands.add_command("build", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		building_queue = game.json_to_table(command.parameter)
+		building = true
+	end
+end)
+
 commands.add_command("drawbox", nil, function(command)
 	if (check_busy()) then
 		game.print("im busy")
@@ -264,17 +274,6 @@ commands.add_command("craft", nil, function(command)
 		bot.begin_crafting{recipe=a.recipe, count=a.count}
 	end
 end)
-
-commands.add_command("place", nil, function(command)
-	local a = game.json_to_table(command.parameter)
-	if a.dir == nil then a.dir = 0 end
-	place_safe(a.pos, a.item, a.dir, a.recipe) -- recipe can be also nil
-end)
-
-commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)
-commands.add_command("writewater", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
-commands.add_command("writetrees", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
-commands.add_command("writerocks", nil, function(command) write_rocks(                                     ) end)
 
 --- ================ ---
 --- ===  EVENTS  === ---
@@ -344,7 +343,17 @@ script.on_event(defines.events.on_tick, function(event)
 		place(placing_pos, placing_item, placing_dir, placing_recipe)
 		placing = false
 	elseif building then
-		-- todo
+		if #building_queue == 0 then
+			building = false
+			game.print("building done")
+		else
+			if type(building_queue) == 4 then
+				game.print("building_queue is a string instead of a stable O.o") -- this happens for some reason
+			else
+				b = table.remove(building_queue, 1)
+				place_safe({b.pos.x, b.pos.y}, b.name, b.rotation, b.recipe)
+			end
+		end
 	elseif clearing then
 		clearing_target = game.surfaces[1].find_entities_filtered{area = clearing_area, type="tree", limit=1}[1]
 

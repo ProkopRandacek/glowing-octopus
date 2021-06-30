@@ -22,14 +22,5 @@ func main() {
 		return
 	}
 
-	/*A := Box{Position{0, 0}, Position{10, 10}}
-
-	for i := 0; i < 100; i++ {
-		B := A
-		bot.Mapper.findSpace(&B)
-		bot.drawBox(B, Color{0, 0, 1})
-		bot.Mapper.alloc(B)
-	}*/
-
 	bot.newFactory("inserter", 4)
 }
