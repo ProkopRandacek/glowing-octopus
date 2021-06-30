@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		fmt.Println("could not initialize bot")
 		fmt.Println(err.Error())
+		return
 	}
 
 	A := Box{Position{0, 0}, Position{10, 10}}
@@ -30,4 +31,3 @@ func main() {
 		bot.Mapper.alloc(B)
 	}
 }
-

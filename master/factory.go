@@ -77,7 +77,7 @@ func (b *Bot) newFactory(itemStr string, ps float32) error {
 
 	asmCount := int(math.Ceil(float64(ps * item.CraftTime))) // count of assemblers needed
 
-	out := make([]Building, asmCount * len(bp.Buildings))
+	out := make([]Building, asmCount*len(bp.Buildings))
 
 	bCount := 0 // count of building placed
 	for i := 0; i < asmCount; i++ {

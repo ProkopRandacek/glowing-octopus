@@ -16,8 +16,8 @@ func (b *Bot) waitForTaskDone() { // Waits until task is done.
 	for {
 		fmt.Println("Waiting for task done")
 		time.Sleep(2 * time.Second)
-		b.refreshState()
-		if !(b.State.Walking || b.State.Mining || b.State.Placing || b.State.Clearing || b.State.Building) {
+		s := b.State()
+		if !(s.Walking || s.Mining || s.Placing || s.Clearing || s.Building) {
 			break
 		}
 	}
@@ -60,10 +60,8 @@ func (b *Bot) getResources(box Box) ([][]Position, error) {
 	return resrc, nil
 }
 
-func (b *Bot) walkTo(p Position) error {
-	b.State.Walking = true
-	_, err := b.conn.Execute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
-	return err
+func (b *Bot) walkTo(p Position) {
+	b.conn.Execute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
 }
 
 func (b *Bot) drawBox(box Box, color Color) {

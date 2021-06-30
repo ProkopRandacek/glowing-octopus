@@ -24,7 +24,6 @@ type Task func(*Bot) error
 type Bot struct {
 	conn     *rcon.RCON
 	Mapper   Mapper
-	State    State
 	TaskList *list.List
 }
 
@@ -55,23 +54,24 @@ func newBot(address, password string) (Bot, error) {
 	return bot, nil
 }
 
-func (b *Bot) refreshState() {
+func (b *Bot) State() State {
 	f, err := os.Open("./master/script-output/state.json")
 	if f == nil {
 		fmt.Println("Error opening state file: ", err)
-		return
+		return State{}
 	}
 	defer f.Close()
 
 	dat, err := io.ReadAll(f)
 	if err != nil {
 		fmt.Println("Error reading state file: ", err)
-		return
+		return State{}
 	}
 
-	newState := State{}
-	json.Unmarshal(dat, &newState)
-	b.State = newState
+	state := State{}
+	json.Unmarshal(dat, &state)
+
+	return state
 }
 
 func (b *Bot) addTask(t Task) {
