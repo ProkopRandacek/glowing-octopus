@@ -24,6 +24,12 @@ local placing_item = nil
 local placing_pos = nil
 local placing_dir = nil
 
+local puting = false
+local puting_pos = nil
+local puting_item = nil
+local puting_amount = nil
+local puting_slot = nil
+
 local building = false
 local building_queue = nil
 
@@ -160,12 +166,14 @@ function mine_resource(pos, amount, name)
 	resource_mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type="resource"}[1]
 	resource_mining_amount = amount
 	resource_mining_name = name
-	resource_mining = true
 	if resource_mining_target == nil then
 		game.print("resource not found")
 		return
+	elseif bot.get_item_count(resource_mining_name) >= resource_mining_amount then
+		game.print("aleady have the resources")
 	else -- only walk if resource found
 		walkto(pos)
+		resource_mining = true
 	end
 end
 
@@ -222,6 +230,44 @@ function place_safe(pos, item, dir, recipe) -- walk there and then place it
 	placing_pos = pos
 	placing_dir = dir
 	placing_recipe = recipe
+end
+
+-- slot: https://lua-api.factorio.com/latest/defines.html#defines.inventory
+function putin(position, item, amount, slot)
+	bot.update_selected_entity(position)
+
+	local amountininventory = bot.get_item_count(item)
+	local otherinv = bot.selected.get_inventory(slot)
+	local toinsert = math.min(amountininventory, amount)
+
+	if toinsert == 0 then
+		game.print("nothing to insert cuz toinsert == 0")
+		return true
+	end
+	if not otherinv then
+		game.print("no slot")
+		return false
+	end
+
+	local inserted = otherinv.insert{name=item, count=toinsert}
+	--if we already failed for trying to insert no items, then if no items were inserted, it must be because it is full
+	if inserted == 0 then
+		game.print("nothing to insert cuz inserted == 0")
+		return true
+	end
+
+	bot.remove_item{name=item, count=inserted}
+	return true
+end
+
+function putin_safe(pos, item, amount, slot)
+	walkto(pos)
+
+	puting = true
+	puting_pos = pos
+	puting_item = item
+	puting_amount = amount
+	puting_slot = slot
 end
 
 --- ================== ---
@@ -307,6 +353,16 @@ commands.add_command("craft", nil, function(command)
 	end
 end)
 
+commands.add_command("put", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		game.print(command.parameter)
+		putin_safe(a.pos, a.item, a.amount, a.slot)
+	end
+end)
+
 --- ================ ---
 --- ===  EVENTS  === ---
 --- ================ ---
@@ -357,11 +413,14 @@ script.on_event(defines.events.on_tick, function(event)
 			bot.walking_state = walking_state -- stop the player
 			game.print("walking done")
 		end
+	elseif puting then
+		putin(puting_pos, puting_item, puting_amount, puting_slot)
+		puting = false
 	elseif resource_mining then
 		i_have = bot.get_item_count(resource_mining_name)
 		i_need = resource_mining_amount
 		if i_have < i_need then
-			game.print(i_have .. " / " .. i_need)
+			game.print(i_have .. " / " .. i_need .. " " .. resource_mining_name)
 			bot.update_selected_entity(resource_mining_target.position)
 			bot.mining_state = {mining = true, position = resource_mining_target.position}
 		else

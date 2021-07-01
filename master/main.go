@@ -22,12 +22,21 @@ func main() {
 		return
 	}
 
-	bp, err := bot.newFactory("inserter", 4)
+	bot.clearAll(Box{Position{-70,-20}, Position{20,20}}) // mine the ship
+
+	resrcs, err := bot.getResources(Box{Position{-220, -220},Position{220, 220}}) // get the start area ores
 	if err != nil {
-		fmt.Println("could not build the factory")
+		fmt.Println("could not get the resources")
 		fmt.Println(err.Error())
 		return
 	}
+	bot.Mapper.readResources(resrcs)
 
-	bot.build(bp)
+	bot.mineResource(bot.Mapper.Resrcs[2][0], 10, "coal")
+	bot.waitForTaskDone()
+	bot.mineResource(bot.Mapper.Resrcs[0][0], 10, "iron-ore")
+	bot.waitForTaskDone()
+	bot.place(bot.state().Pos, "stone-furnace") // place furnace
+	bot.waitForTaskDone()
+	bot.put(bot.state().Pos, "coal", 10, 1) // put coal in furnace
 }

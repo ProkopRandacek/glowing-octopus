@@ -22,6 +22,7 @@ type Mapper struct {
 	AllocMap       []Box
 	WaterTiles     []Position   // the exact tiles that are in water
 	WaterBox       Box          // water boxes for fast intersection check
+	// 0:iron-ore, 1:copper-ore, 2:coal, 3:stone, 4:uranium-ore, 5:crude-oil
 	Resrcs         [][]Position // all the individual ore tiles
 	OrePatches     [][]OrePatch // ore tiles grouped together into patches
 	LoadedBoxes    []Box        // all the area boxes that we requested from the game
