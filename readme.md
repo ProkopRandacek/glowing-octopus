@@ -8,11 +8,11 @@ Autonomous Factorio bot.
 - [x] Drawbox
 - [x] Place thing
 - [x] Craft thing
-- [ ] Set recipe
-- [ ] Rotate thing
+- [x] Set recipe
 - [ ] Put item into a thing
 - [ ] Take item from a thing
 - [x] Mine rocks & trees in an area
+  - [ ] Split the area into smaller chunks to optimize the path when clearing
 - [ ] Explore area
 
 ## Go side:

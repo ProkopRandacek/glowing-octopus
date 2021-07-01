@@ -16,7 +16,7 @@ func (b *Bot) waitForTaskDone() { // Waits until task is done.
 	for {
 		fmt.Println("Waiting for task done")
 		time.Sleep(2 * time.Second)
-		s := b.State()
+		s := b.state()
 		if !(s.Walking || s.Mining || s.Placing || s.Clearing || s.Building) {
 			break
 		}
@@ -96,7 +96,7 @@ func (b *Bot) placeDir(p Position, item string, dir int) {
 	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","dir":%d}`, p.X, p.Y, item, dir))
 }
 
-func (b *Bot) build(b []Building) {
-	s, _ := json.Marshal(b)
-	b.conn.Execute(fmt.Sprintf(`/build %s`, s))
+func (b *Bot) build(bs []Building) {
+	s, _ := json.Marshal(bs)
+	b.conn.Execute(fmt.Sprintf(`/build %s`, string(s)))
 }

@@ -22,5 +22,12 @@ func main() {
 		return
 	}
 
-	bot.newFactory("inserter", 4)
+	bp, err := bot.newFactory("inserter", 4)
+	if err != nil {
+		fmt.Println("could not build the factory")
+		fmt.Println(err.Error())
+		return
+	}
+
+	bot.build(bp)
 }

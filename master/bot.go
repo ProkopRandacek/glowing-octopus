@@ -61,7 +61,7 @@ func newBot(address, password string) (Bot, error) {
 	return bot, nil
 }
 
-func (b *Bot) State() State {
+func (b *Bot) state() State {
 	f, err := os.Open("./master/script-output/state.json")
 	if f == nil {
 		fmt.Println("Error opening state file: ", err)

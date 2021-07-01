@@ -157,7 +157,6 @@ function clear(area, t)
 	clearing_type = t
 
 	if clearing_type == "all" then
-		game.print("clearing all")
 		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true, limit=1}
 	elseif clearing_type == "nature" then
 		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"tree", "simple-entity"}, limit=1}
@@ -315,10 +314,10 @@ script.on_event(defines.events.on_tick, function(event)
 	tick = tick + 1
 	if not inited then return end
 
-	thing = surface.find_entities_filtered{position=game.players[1].position, radius=1, type={"character"}, invert=true, limit=1}[1]
+	--[[thing = surface.find_entities_filtered{position=game.players[1].position, radius=1, type={"character"}, invert=true, limit=1}[1]
 	if thing ~= nil then
 		game.print(thing.type .. " " .. thing.name)
-	end
+	end]]
 	bot.color = {
 		r=(math.sin(tick / 10.0) * 0.5 + 0.5) * 255.0,
 		g=(math.cos(tick / 20.0) * 0.5 + 0.5) * 255.0,
