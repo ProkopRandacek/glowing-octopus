@@ -1,7 +1,5 @@
 require("util")
 
-local instant_mine = false
-
 local tick = 0
 local inited = false
 
@@ -10,6 +8,11 @@ local walking_to = {} -- the position that were walking to
 
 local mining = false
 local mining_target = nil
+
+local resource_mining = false
+local resource_mining_name = nil
+local resource_mining_target = nil
+local resource_mining_amount = nil
 
 local clearing = false
 local clearing_target = nil
@@ -106,7 +109,7 @@ function write_trees(area)
 	game.print("trees export done")
 end
 
-function write_rocks() -- the ammount of rocks is tiny, this function can export all rocks in huge world in a fraction of a second
+function write_rocks() -- the amount of rocks is tiny, this function can export all rocks in huge world in a fraction of a second
 	output = {}
 	for i, e in pairs(game.surfaces[1].find_entities_filtered{name={"rock-huge", "sand-rock-big", "rock-big"}}) do
 		products = e.prototype.mineable_properties.products
@@ -149,6 +152,20 @@ function mine(pos)
 	if mining_target == nil then
 		game.print("mine target entity not found")
 		return
+	end
+end
+
+function mine_resource(pos, amount, name)
+	game.print("mine resource at " .. game.table_to_json(pos))
+	resource_mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type="resource"}[1]
+	resource_mining_amount = amount
+	resource_mining_name = name
+	resource_mining = true
+	if resource_mining_target == nil then
+		game.print("resource not found")
+		return
+	else -- only walk if resource found
+		walkto(pos)
 	end
 end
 
@@ -225,6 +242,15 @@ commands.add_command("walkto", nil, function(command)
 	end
 end)
 
+commands.add_command("mineresource", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		mine_resource(a.pos, a.amount, a.name)
+	end
+end)
+
 commands.add_command("mine", nil, function(command)
 	if (check_busy()) then
 		game.print("im busy")
@@ -292,8 +318,8 @@ function init()
 		game.print("no fbot found. Imma create it")
 		bot = surface.create_entity{
 			name="character",
-			position={0, 0},
-			direction=0,
+			position={3, 2},
+			direction=3,
 			force="player",
 			fast_replace=true
 		}
@@ -331,23 +357,25 @@ script.on_event(defines.events.on_tick, function(event)
 			bot.walking_state = walking_state -- stop the player
 			game.print("walking done")
 		end
-	elseif mining then
-		if instant_mine then
-			result = bot.mine_entity(mining_target, true)
-			if result == false then
-				game.print("failed to mine " .. mining_target.type .. " " .. mining_target.name)
-			else
-				mining = false
-				game.print("mining done")
-			end
+	elseif resource_mining then
+		i_have = bot.get_item_count(resource_mining_name)
+		i_need = resource_mining_amount
+		if i_have < i_need then
+			game.print(i_have .. " / " .. i_need)
+			bot.update_selected_entity(resource_mining_target.position)
+			bot.mining_state = {mining = true, position = resource_mining_target.position}
 		else
-			if mining_target ~= nil and mining_target.valid then
-				bot.update_selected_entity(mining_target.position)
-				bot.mining_state = {mining = true, position = mining_target.position}
-			else
-				mining = false
-				game.print("mining done")
-			end
+			resource_mining = false
+			bot.mining_state = { mining = false }
+			game.print("resource mining done")
+		end
+	elseif mining then
+		if mining_target ~= nil and mining_target.valid then
+			bot.update_selected_entity(mining_target.position)
+			bot.mining_state = { mining = true, position = mining_target.position }
+		else
+			mining = false
+			game.print("mining done")
 		end
 	elseif placing then
 		place(placing_pos, placing_item, placing_dir, placing_recipe)

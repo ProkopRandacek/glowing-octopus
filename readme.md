@@ -14,6 +14,7 @@ Autonomous Factorio bot.
 - [x] Mine rocks & trees in an area
   - [ ] Split the area into smaller chunks to optimize the path when clearing
 - [ ] Explore area
+- [ ] Sometimes tries to mine fire
 
 ## Go side:
 - [x] RCON
