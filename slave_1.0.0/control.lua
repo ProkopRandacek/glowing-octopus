@@ -88,10 +88,14 @@ function mark_area(color, text, x1, y1, x2, y2)
 end
 
 function write_resrc(area)
-	ids = { ["iron-ore"] = 1, ["copper-ore"] = 2, ["coal"] = 3, ["stone"] = 4, ["uranium-ore"] = 5, ["crude-oil"] = 6}
-	output = {{},{},{},{},{},{}}
+	output = { ["iron-ore"] = {}, ["copper-ore"] = {}, ["coal"] = {}, ["stone"] = {}, ["uranium-ore"] = {}, ["crude-oil"] = {}}
 	for i, e in pairs(game.surfaces[1].find_entities_filtered{area = area, type="resource"}) do
-		table.insert(output[ids[e.name]], {x = e.position.x, y = e.position.y, a = e.amount})
+		table.insert(output[e.name], {x = e.position.x, y = e.position.y})
+	end
+	for k, v in pairs(output) do -- remove empty keys
+		if #v == 0 then
+			output[k] = nil
+		end
 	end
 	game.write_file("resrc.json", game.table_to_json(output))
 	game.print("resources export done")
@@ -134,6 +138,7 @@ function write_state()
 		["position"] = bot.position,
 		["walking_state"] = walking_state.walking,
 		["mining_state"] = mining,
+		["mining_resource_state"] = resource_mining,
 		["placing_state"] = placing,
 		["clearing_state"] = clearing,
 		["building_state"] = building
@@ -163,7 +168,7 @@ end
 
 function mine_resource(pos, amount, name)
 	game.print("mine resource at " .. game.table_to_json(pos))
-	resource_mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type="resource"}[1]
+	resource_mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=0.2, type="resource"}[1]
 	resource_mining_amount = amount
 	resource_mining_name = name
 	if resource_mining_target == nil then
@@ -358,7 +363,6 @@ commands.add_command("put", nil, function(command)
 		game.print("im busy")
 	else
 		local a = game.json_to_table(command.parameter)
-		game.print(command.parameter)
 		putin_safe(a.pos, a.item, a.amount, a.slot)
 	end
 end)
@@ -420,7 +424,8 @@ script.on_event(defines.events.on_tick, function(event)
 		i_have = bot.get_item_count(resource_mining_name)
 		i_need = resource_mining_amount
 		if i_have < i_need then
-			game.print(i_have .. " / " .. i_need .. " " .. resource_mining_name)
+
+			game.print(i_have .. " / " .. i_need .. " " .. resource_mining_name .. " at " .. game.table_to_json(resource_mining_target.position))
 			bot.update_selected_entity(resource_mining_target.position)
 			bot.mining_state = {mining = true, position = resource_mining_target.position}
 		else

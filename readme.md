@@ -9,7 +9,7 @@ Autonomous Factorio bot.
 - [x] Place thing
 - [x] Craft thing
 - [x] Set recipe
-- [ ] Put item into a thing
+- [x] Put item into a thing
 - [ ] Take item from a thing
 - [x] Mine rocks & trees in an area
   - [ ] Split the area into smaller chunks to optimize the path when clearing
@@ -34,3 +34,6 @@ Autonomous Factorio bot.
 - [ ] Building
 - [ ] Unit tests
 - [ ] Command shell
+
+## Bugs:
+- Starting the bot while the cutscene is running and then skipping the cutscene causes desync error.

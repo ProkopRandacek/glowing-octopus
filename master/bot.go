@@ -11,12 +11,13 @@ import (
 )
 
 type State struct { // Lua bot internal representation
-	Pos      Position `json:"position"`
-	Walking  bool     `json:"walking_state"`
-	Mining   bool     `json:"mining_state"`
-	Placing  bool     `json:"placing_state"`
-	Clearing bool     `json:"clearing_state"`
-	Building bool     `json:"building_state"`
+	Pos            Position `json:"position"`
+	Walking        bool     `json:"walking_state"`
+	Mining         bool     `json:"mining_state"`
+	ResourceMining bool     `json:"mining_resource_state"`
+	Placing        bool     `json:"placing_state"`
+	Clearing       bool     `json:"clearing_state"`
+	Building       bool     `json:"building_state"`
 }
 
 type Task func(*Bot) error
@@ -49,8 +50,26 @@ func newBot(address, password string) (Bot, error) {
 	}
 
 	bot.Mapper = Mapper{}
-	bot.Mapper.Resrcs = make([][]Position, 4)
-	bot.Mapper.OrePatches = make([][]OrePatch, 4)
+	bot.Mapper.Resrcs = make(map[string][]Position, 6)
+	bot.Mapper.OrePatches = make(map[string][]OrePatch, 6)
+
+	bot.Mapper.Resrcs = map[string][]Position{
+		"iron-ore":    []Position{},
+		"copper-ore":  []Position{},
+		"coal":        []Position{},
+		"stone":       []Position{},
+		"uranium-ore": []Position{},
+		"crude-oil":   []Position{},
+	}
+
+	bot.Mapper.OrePatches = map[string][]OrePatch{
+		"iron-ore":    []OrePatch{},
+		"copper-ore":  []OrePatch{},
+		"coal":        []OrePatch{},
+		"stone":       []OrePatch{},
+		"uranium-ore": []OrePatch{},
+		"crude-oil":   []OrePatch{},
+	}
 
 	bot.TaskList = list.New()
 

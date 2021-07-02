@@ -17,13 +17,13 @@ func (b *Bot) waitForTaskDone() { // Waits until task is done.
 		fmt.Println("Waiting for task done")
 		time.Sleep(2 * time.Second)
 		s := b.state()
-		if !(s.Walking || s.Mining || s.Placing || s.Clearing || s.Building) {
+		if !(s.Walking || s.Mining || s.ResourceMining || s.Placing || s.Clearing || s.Building) {
 			break
 		}
 	}
 }
 
-func (b *Bot) getResources(box Box) ([][]Position, error) {
+func (b *Bot) getResources(box Box) (map[string][]Position, error) {
 	filename := scriptFolder + "resrc.json"
 	os.Remove(filename)
 	_, err := b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
@@ -52,12 +52,15 @@ func (b *Bot) getResources(box Box) ([][]Position, error) {
 		return nil, err
 	}
 
-	var resrc [][]Position
-	json.Unmarshal(dat, &resrc)
+	var resrcs map[string][]Position
+	err = json.Unmarshal(dat, &resrcs)
+	if err != nil {
+		return nil, err
+	}
 
 	b.Mapper.LoadedBoxes = append(b.Mapper.LoadedBoxes, box)
 
-	return resrc, nil
+	return resrcs, nil
 }
 
 func (b *Bot) walkTo(p Position) {
@@ -104,7 +107,7 @@ func (b *Bot) placeDir(p Position, item string, dir int) {
 // fuel = 1
 // furnace_source = 2
 func (b *Bot) put(p Position, item string, amount int, slot int) {
-	b.conn.Execute(fmt.Sprintf(`/put {"pos":[%d,%d],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
+	b.conn.Execute(fmt.Sprintf(`/put {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
 }
 
 func (b *Bot) build(bs []Building) {

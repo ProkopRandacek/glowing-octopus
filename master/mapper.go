@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"math"
 )
 
 type OrePatch struct {
 	Dims   Box
 	Unsafe bool
-	Type   int
 }
 
 type Area struct {
@@ -20,12 +20,11 @@ type Mapper struct {
 	AllocIdCounter int    // for area id generation
 	MallMap        map[string]Position
 	AllocMap       []Box
-	WaterTiles     []Position   // the exact tiles that are in water
-	WaterBox       Box          // water boxes for fast intersection check
-	// 0:iron-ore, 1:copper-ore, 2:coal, 3:stone, 4:uranium-ore, 5:crude-oil
-	Resrcs         [][]Position // all the individual ore tiles
-	OrePatches     [][]OrePatch // ore tiles grouped together into patches
-	LoadedBoxes    []Box        // all the area boxes that we requested from the game
+	WaterTiles     []Position            // the exact tiles that are in water
+	WaterBox       Box                   // water boxes for fast intersection check
+	Resrcs         map[string][]Position // all the individual ore tiles
+	OrePatches     map[string][]OrePatch // ore tiles grouped together into patches
+	LoadedBoxes    []Box                 // all the area boxes that we requested from the game
 }
 
 // Ore types
@@ -98,13 +97,13 @@ func findComponents(tiles []Position) (boxes []OrePatch) { // divide graph into 
 				break
 			}
 		}
-		boxes = append(boxes, OrePatch{Box{Position{maxx, miny}, Position{minx, maxy}}, false, 0})
+		boxes = append(boxes, OrePatch{Box{Position{maxx, miny}, Position{minx, maxy}}, true})
 	}
 	return
 }
 
 func (m *Mapper) calcPatches() {
-	for t := 0; t < 4; t++ { // for each resource type
+	for t := range m.OrePatches { // for each resource type
 		m.OrePatches[t] = findComponents(m.Resrcs[t])
 	}
 }
@@ -113,15 +112,15 @@ func (m *Mapper) calcUnsafe() {
 	for i := range m.OrePatches {
 		for j := range m.OrePatches[i] {
 			m.OrePatches[i][j].isUnsafe(m.LoadedBoxes)
-			m.OrePatches[i][j].Type = i
 		}
 	}
 }
 
-func (m *Mapper) readResources(r [][]Position) {
-	for t := 0; t < 4; t++ { // for each resource type
-		if len(r[t]) != 0 {
+func (m *Mapper) readResources(r map[string][]Position) {
+	for t := range m.Resrcs { // for each resource type
+		if len(r[t]) > 0 {
 			m.Resrcs[t] = append(m.Resrcs[t], r[t]...) // append the ores to it
+			fmt.Println("read", t, "len:", len(r[t]))
 		}
 	}
 	m.calcPatches()
