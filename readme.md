@@ -9,6 +9,8 @@ Autonomous Factorio bot.
 - [x] Place thing
 - [x] Craft thing
 - [x] Set recipe
+- [x] Mine resource
+  - [ ] Handle when resource path runs out
 - [x] Put item into a thing
 - [ ] Take item from a thing
 - [x] Mine rocks & trees in an area

@@ -106,8 +106,13 @@ func (b *Bot) placeDir(p Position, item string, dir int) {
 // https://lua-api.factorio.com/latest/defines.html#defines.inventory
 // fuel = 1
 // furnace_source = 2
+// furnace result = 3
 func (b *Bot) put(p Position, item string, amount int, slot int) {
 	b.conn.Execute(fmt.Sprintf(`/put {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
+}
+
+func (b *Bot) take(p Position, item string, amount int, slot int) {
+	b.conn.Execute(fmt.Sprintf(`/take {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
 }
 
 func (b *Bot) build(bs []Building) {

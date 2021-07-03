@@ -30,6 +30,12 @@ local puting_item = nil
 local puting_amount = nil
 local puting_slot = nil
 
+local taking = false
+local taking_pos = nil
+local taking_item = nil
+local taking_amount = nil
+local taking_slot = nil
+
 local building = false
 local building_queue = nil
 
@@ -168,7 +174,7 @@ end
 
 function mine_resource(pos, amount, name)
 	game.print("mine resource at " .. game.table_to_json(pos))
-	resource_mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=0.2, type="resource"}[1]
+	resource_mining_target = surface.find_entities_filtered{limit=1, position={pos[1] + 0.5, pos[2] + 0.5}, radius=0.2, type="resource"}[1]
 	resource_mining_amount = amount
 	resource_mining_name = name
 	if resource_mining_target == nil then
@@ -262,7 +268,32 @@ function putin(position, item, amount, slot)
 	end
 
 	bot.remove_item{name=item, count=inserted}
-	return true
+end
+
+function takeout(position, item, amount, slot)
+	bot.update_selected_entity(position)
+
+	local otherinv = bot.selected.get_inventory(slot)
+	local amountintarget = otherinv.get_item_count(item)
+	local totake = math.min(amountintarget, amount)
+
+	if not otherinv then
+		game.print("no slot")
+		return
+	end
+	if totake == 0 then
+		game.print("nothing to take cuz totake == 0")
+		return
+	end
+
+	local taken = bot.insert{name=item, count=totake}
+
+	if taken == 0 then
+		game.print("nothing taken cuz taken == 0")
+		return
+	end
+
+	otherinv.remove{name=item, count=totake}
 end
 
 function putin_safe(pos, item, amount, slot)
@@ -273,6 +304,16 @@ function putin_safe(pos, item, amount, slot)
 	puting_item = item
 	puting_amount = amount
 	puting_slot = slot
+end
+
+function takeout_safe(pos, item, amount, slot)
+	walkto(pos)
+
+	taking = true
+	taking_pos = pos
+	taking_item = item
+	taking_amount = amount
+	taking_slot = slot
 end
 
 --- ================== ---
@@ -367,6 +408,15 @@ commands.add_command("put", nil, function(command)
 	end
 end)
 
+commands.add_command("take", nil, function(command)
+	if (check_busy()) then
+		game.print("im busy")
+	else
+		local a = game.json_to_table(command.parameter)
+		takeout_safe(a.pos, a.item, a.amount, a.slot)
+	end
+end)
+
 --- ================ ---
 --- ===  EVENTS  === ---
 --- ================ ---
@@ -420,6 +470,9 @@ script.on_event(defines.events.on_tick, function(event)
 	elseif puting then
 		putin(puting_pos, puting_item, puting_amount, puting_slot)
 		puting = false
+	elseif taking then
+		takeout(taking_pos, taking_item, taking_amount, taking_slot)
+		taking = false
 	elseif resource_mining then
 		i_have = bot.get_item_count(resource_mining_name)
 		i_need = resource_mining_amount
