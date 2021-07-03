@@ -174,7 +174,7 @@ end
 
 function mine_resource(pos, amount, name)
 	game.print("mine resource at " .. game.table_to_json(pos))
-	resource_mining_target = surface.find_entities_filtered{limit=1, position={pos[1] + 0.5, pos[2] + 0.5}, radius=0.2, type="resource"}[1]
+	resource_mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=0.2, type="resource"}[1]
 	resource_mining_amount = amount
 	resource_mining_name = name
 	if resource_mining_target == nil then
@@ -395,7 +395,8 @@ commands.add_command("craft", nil, function(command)
 		game.print("im busy")
 	else
 		local a = game.json_to_table(command.parameter)
-		bot.begin_crafting{recipe=a.recipe, count=a.count}
+		game.print("started crafting " .. a.count .. " " .. a.recipe)
+		bot.begin_crafting{recipe=a.item, count=a.count}
 	end
 end)
 
@@ -477,7 +478,6 @@ script.on_event(defines.events.on_tick, function(event)
 		i_have = bot.get_item_count(resource_mining_name)
 		i_need = resource_mining_amount
 		if i_have < i_need then
-
 			game.print(i_have .. " / " .. i_need .. " " .. resource_mining_name .. " at " .. game.table_to_json(resource_mining_target.position))
 			bot.update_selected_entity(resource_mining_target.position)
 			bot.mining_state = {mining = true, position = resource_mining_target.position}
@@ -492,6 +492,7 @@ script.on_event(defines.events.on_tick, function(event)
 			bot.mining_state = { mining = true, position = mining_target.position }
 		else
 			mining = false
+			bot.mining_state = { mining = false }
 			game.print("mining done")
 		end
 	elseif placing then
@@ -519,6 +520,7 @@ script.on_event(defines.events.on_tick, function(event)
 
 		if clearing_target == nil then
 			clearing = false
+			mining = false
 			game.print("clearing done")
 		else
 			game.print("found next thing to clear. Its a " .. clearing_target.name)
