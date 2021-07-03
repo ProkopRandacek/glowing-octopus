@@ -24,16 +24,16 @@ func main() {
 
 	A := Box{Position{0, 0}, Position{10, 10}}
 
-	for i := 0; i < 50; i++ {
-		B := A
-		bot.Mapper.findSpace(&B)
-		bot.drawBox(B, Color{0, 0, 1})
-		bot.Mapper.alloc(B)
+	resrcs, err := bot.getResources(Box{Position{-70, -50}, Position{50, 50}}) // get the start area ores
+	if err != nil {
+		fmt.Println("could not get the resources")
+		fmt.Println(err.Error())
+		return
 	}
+	bot.Mapper.readResources(resrcs)
 
-	path := bot.Mapper.FindBeltPath(Position{-18, 13}, Position{7, -19})
+	fmt.Println(bot.Mapper.OrePatches)
 
-	for _, k := range path {
-		bot.drawPoint(k.Pos, Color{1, 1, 1})
-	}
+	bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
+	bot.build(bot.newMiners(bot.Mapper.OrePatches["copper-ore"][0]))
 }
