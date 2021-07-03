@@ -129,13 +129,14 @@ func (m *Mapper) readResources(r map[string][]Position) {
 
 // returns true, if dims is available
 func (m *Mapper) canAlloc(b Box) bool {
+	const gap = 5 // how much space to keep between allocated areas (for belts and stuff)
 	for _, t := range m.Areas {
 		a := t.Dims
 
-		if !(b.Tl.X > a.Br.X ||
-			b.Br.X < a.Tl.X ||
-			b.Tl.Y > a.Br.Y ||
-			b.Br.Y < a.Tl.Y) {
+		if !((b.Tl.X - a.Br.X) > gap ||
+			(b.Br.X - a.Tl.X) < -gap ||
+			(b.Tl.Y - a.Br.Y) > gap ||
+			(b.Br.Y - a.Tl.Y) < -gap) {
 			return false
 		}
 	}
