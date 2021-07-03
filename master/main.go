@@ -34,6 +34,6 @@ func main() {
 
 	fmt.Println(bot.Mapper.OrePatches)
 
-	bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
+	//bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
 	bot.build(bot.newMiners(bot.Mapper.OrePatches["copper-ore"][0]))
 }
