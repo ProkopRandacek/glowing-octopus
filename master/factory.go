@@ -107,13 +107,13 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
 
-	out := make([]Building, wcount*hcount*len(minerBp.Buildings)+hcount+wcount) // count of bps * buildings in bp + additional poles
+	out := make([]Building, wcount * hcount * len(minerBp.Buildings) + hcount + wcount) // count of bps * buildings in bp + additional poles
 	bCount := 0
 
-	for h := 0; h < hcount; h++ { // add poles on the left
+	for h:=0; h < hcount; h++ { // add poles on the left
 		out[bCount] = Building{
-			"small-electric-pole", dirNorth, "",
-			Position{patch.Dims.Tl.X - 1, float64(h)*minerBp.Dims.Y + patch.Dims.Tl.Y}}
+			"small-electric-pole", up, "",
+			Position{patch.Dims.Tl.X - 1, float64(h) * minerBp.Dims.Y + patch.Dims.Tl.Y}}
 
 		bCount++
 	}
