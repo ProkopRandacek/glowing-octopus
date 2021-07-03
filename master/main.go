@@ -24,7 +24,7 @@ func main() {
 
 	//bot.clearAll(Box{Position{-70,-20}, Position{20,20}}) // mine the ship
 
-	resrcs, err := bot.getResources(Box{Position{-220, -220}, Position{220, 220}}) // get the start area ores
+	resrcs, err := bot.getResources(Box{Position{-70, -50}, Position{50, 50}}) // get the start area ores
 	if err != nil {
 		fmt.Println("could not get the resources")
 		fmt.Println(err.Error())
@@ -32,13 +32,8 @@ func main() {
 	}
 	bot.Mapper.readResources(resrcs)
 
-	bot.mineResource(bot.Mapper.Resrcs["coal"][0], 1, "coal")
-	bot.waitForTaskDone()
-	bot.mineResource(bot.Mapper.Resrcs["iron-ore"][0], 1, "iron-ore")
-	bot.waitForTaskDone()
-	bot.place(bot.state().Pos, "stone-furnace") // place furnace
-	bot.waitForTaskDone()
-	bot.put(bot.state().Pos, "coal", 1, 1) // put coal in furnace fuel slot
-	bot.waitForTaskDone()
-	bot.put(bot.state().Pos, "iron-ore", 1, 2) // put iron in furnace source slot*/
+	fmt.Println(bot.Mapper.OrePatches)
+
+	bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
+	bot.build(bot.newMiners(bot.Mapper.OrePatches["copper-ore"][0]))
 }

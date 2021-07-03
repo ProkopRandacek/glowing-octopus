@@ -109,3 +109,33 @@ func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
 
 	return out, nil
 }
+
+func (b *Bot) newMiners(patch OrePatch) []Building {
+	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
+	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
+
+	out := make([]Building, wcount * hcount * len(minerBp.Buildings))
+	bCount := 0
+	for w:=0; w < wcount; w++ {
+		for h:=0; h < hcount; h++ {
+			for _, building := range minerBp.Buildings {
+				out[bCount] = building
+				out[bCount].Pos.X += float64(w) * minerBp.Dims.X + patch.Dims.Tl.X
+				out[bCount].Pos.Y += float64(h) * minerBp.Dims.Y + patch.Dims.Tl.Y
+
+				if out[bCount].Name == "belt" {
+					out[bCount].Name = ""
+					if len(b.BeltLevel) > 0 {
+						out[bCount].Name = b.BeltLevel + "-"
+					}
+  
+					out[bCount].Name += "transport-belt"
+				}
+  
+				bCount++
+			}
+		}
+	}
+
+	return out
+}

@@ -228,3 +228,50 @@ var fluidBp = Blueprint{
 		},
 	},
 }
+
+var minerBp = Blueprint {
+	Position{8, 3},
+/*
+MMMBMMMP
+MMMBMMM
+MMMBMMM
+*/
+	[]Building{
+		Building{
+			"electric-mining-drill",
+			right,
+			"",
+			Position{1, 1},
+		},
+		Building{
+			"belt",
+			down,
+			"",
+			Position{3, 0},
+		},
+		Building{
+			"belt",
+			down,
+			"",
+			Position{3, 1},
+		},
+		Building{
+			"belt",
+			down,
+			"",
+			Position{3, 2},
+		},
+		Building{
+			"electric-mining-drill",
+			left,
+			"",
+			Position{4.5, 1},
+		},
+		Building{
+			"small-electric-pole",
+			up,
+			"",
+			Position{7, 0},
+		},
+	},
+}
