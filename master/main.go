@@ -24,7 +24,7 @@ func main() {
 
 	//bot.clearAll(Box{Position{-70,-20}, Position{20,20}}) // mine the ship
 
-	resrcs, err := bot.getResources(Box{Position{-70, -50}, Position{50, 50}}) // get the start area ores
+	resrcs, err := bot.getResources(Box{Position{-100, -100}, Position{100, 100}}) // get the start area ores
 	if err != nil {
 		fmt.Println("could not get the resources")
 		fmt.Println(err.Error())

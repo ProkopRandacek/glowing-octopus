@@ -239,37 +239,37 @@ MMMBMMM
 	[]Building{
 		Building{
 			"electric-mining-drill",
-			right,
+			dirEast,
 			"",
 			Position{1, 1},
 		},
 		Building{
 			"belt",
-			down,
+			dirSouth,
 			"",
 			Position{3, 0},
 		},
 		Building{
 			"belt",
-			down,
+			dirSouth,
 			"",
 			Position{3, 1},
 		},
 		Building{
 			"belt",
-			down,
+			dirSouth,
 			"",
 			Position{3, 2},
 		},
 		Building{
 			"electric-mining-drill",
-			left,
+			dirWest,
 			"",
 			Position{4.5, 1},
 		},
 		Building{
 			"small-electric-pole",
-			up,
+			dirNorth,
 			"",
 			Position{7, 0},
 		},

@@ -24,13 +24,6 @@ type Item struct {
 	Deps      []RecipeDep `json:"deps"`
 }
 
-const (
-	up = iota
-	down
-	left
-	right
-)
-
 type Building struct {
 	Name      string   `json:"name"`
 	Rotation  int      `json:"rotation"`
