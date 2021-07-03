@@ -97,7 +97,7 @@ func findComponents(tiles []Position) (boxes []OrePatch) { // divide graph into 
 				break
 			}
 		}
-		boxes = append(boxes, OrePatch{Box{Position{maxx, miny}, Position{minx, maxy}}, true})
+		boxes = append(boxes, OrePatch{Box{Position{minx, miny}, Position{maxx, maxy}}, true})
 	}
 	return
 }
