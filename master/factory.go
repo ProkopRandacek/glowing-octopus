@@ -53,24 +53,28 @@ func loadRecipes() error {
 
 
 func (b *Bot) resolveBuildingName(curr string) string {
-	if strings.HasPrefix(curr, "assembling-machine") {
+	switch curr {
+	case "assembling-machine-%d":
 		return fmt.Sprintf(curr, b.AssemblerLevel)
-	}
-
-	if curr == "inserter" && len(b.InserterLevel) > 0 {
-		return b.InserterLevel + "-inserter"
-	}
-
-	if curr == "belt" {
+	case "inserter":
+		if len(b.InserterLevel) > 0 {
+			return b.InserterLevel + "-inserter"
+		}
+	case "belt":
 		curr = ""
 		if len(b.BeltLevel) > 0 {
 			curr = b.BeltLevel + "-"
 		}
 
 		return curr + "transport-belt"
-	}
+	case "underground-belt":
+		curr = ""
+		if len(b.BeltLevel) > 0 {
+			curr = b.BeltLevel + "-"
+		}
 
-	if curr == "furnace" {
+		return curr + "underground-belt"
+	case "furnace":
 		return b.FurnaceLevel + "-furnace"
 	}
 
