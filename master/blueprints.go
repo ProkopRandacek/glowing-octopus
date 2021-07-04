@@ -275,3 +275,213 @@ var minerBp = Blueprint{
 		},
 	},
 }
+
+var smeltingHeaderBp = Blueprint{
+	Position{4, 11},
+	[]Building{
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{1, 0},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{2, 0},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{3, 0},
+		},
+		Building{
+			"belt",
+			dirNorth,
+			"",
+			Position{1, 1},
+		},
+		Building{
+			"belt",
+			dirNorth,
+			"",
+			Position{1, 2},
+		},
+		Building{
+			"belt",
+			dirNorth,
+			"",
+			Position{1, 3},
+		},
+		Building{
+			"underground-belt",
+			dirEast,
+			"",
+			Position{0, 4},
+		},
+		Building{
+			"underground-belt",
+			dirWest,
+			"",
+			Position{2, 4},
+		},
+		Building{
+			"belt",
+			dirSouth,
+			"",
+			Position{3, 4},
+		},
+		Building{
+			"belt",
+			dirWest,
+			"",
+			Position{3, 5},
+		},
+		Building{
+			"belt",
+			dirNorth,
+			"",
+			Position{1, 4},
+		},
+		Building{
+			"splitter",
+			dirEast,
+			"",
+			Position{0, 5.5},
+		},
+		Building{
+			"belt",
+			dirNorth,
+			"",
+			Position{1, 5},
+		},
+		Building{
+			"splitter",
+			dirWest,
+			"",
+			Position{2.5, 5.5},
+		},
+		Building{
+			"belt",
+			dirSouth,
+			"",
+			Position{1, 6},
+		},
+		Building{
+			"belt",
+			dirSouth,
+			"",
+			Position{1, 7},
+		},
+		Building{
+			"belt",
+			dirSouth,
+			"",
+			Position{1, 8},
+		},
+		Building{
+			"belt",
+			dirSouth,
+			"",
+			Position{1, 9},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{1, 10},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{2, 10},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{3, 10},
+		},
+	},
+}
+
+var smeltingBp = Blueprint {
+	Position{2, 12},
+	[]Building{
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{0, 0},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{1, 0},
+		},
+		Building{
+			"inserter",
+			dirNorth,
+			"",
+			Position{0, 1},
+		},
+		Building{
+			"furnace",
+			dirNorth,
+			"",
+			Position{1, 3},
+		},
+		Building{
+			"inserter",
+			dirNorth,
+			"",
+			Position{0, 4},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{0, 5},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{1, 5},
+		},
+		Building{
+			"inserter",
+			dirSouth,
+			"",
+			Position{0, 6},
+		},
+		Building{
+			"furnace",
+			dirNorth,
+			"",
+			Position{1, 7.5},
+		},
+		Building{
+			"inserter",
+			dirSouth,
+			"",
+			Position{0, 9},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{0, 10},
+		},
+		Building{
+			"belt",
+			dirEast,
+			"",
+			Position{1, 10},
+		},
+	},
+}

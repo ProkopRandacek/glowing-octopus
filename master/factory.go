@@ -51,6 +51,32 @@ func loadRecipes() error {
 	return nil
 }
 
+
+func (b *Bot) resolveBuildingName(curr string) string {
+	if strings.HasPrefix(curr, "assembling-machine") {
+		return fmt.Sprintf(curr, b.AssemblerLevel)
+	}
+
+	if curr == "inserter" && len(b.InserterLevel) > 0 {
+		return b.InserterLevel + "-inserter"
+	}
+
+	if curr == "belt" {
+		curr = ""
+		if len(b.BeltLevel) > 0 {
+			curr = b.BeltLevel + "-"
+		}
+
+		return curr + "transport-belt"
+	}
+
+	if curr == "furnace" {
+		return b.FurnaceLevel + "-furnace"
+	}
+
+	return curr
+}
+
 func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
 	bp := noFluidBp
 	item, exists := recipes[itemStr]
@@ -80,21 +106,9 @@ func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
 
 			if strings.HasPrefix(out[bCount].Name, "assembling-machine") {
 				out[bCount].CraftItem = itemStr
-				out[bCount].Name = fmt.Sprintf(out[bCount].Name, b.AssemblerLevel)
 			}
 
-			if out[bCount].Name == "inserter" && len(b.InserterLevel) > 0 {
-				out[bCount].Name = b.InserterLevel + "-inserter"
-			}
-
-			if out[bCount].Name == "belt" {
-				out[bCount].Name = ""
-				if len(b.BeltLevel) > 0 {
-					out[bCount].Name = b.BeltLevel + "-"
-				}
-
-				out[bCount].Name += "transport-belt"
-			}
+			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
 
 			bCount++
 		}
@@ -127,7 +141,7 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 
 	for h:=0; h < hcount; h++ { // add poles on the left
 		out[bCount] = Building{
-			"small-electric-pole", up, "",
+			"small-electric-pole", dirNorth, "",
 			Position{patch.Dims.Tl.X - 1, float64(h) * minerBp.Dims.Y + patch.Dims.Tl.Y}}
 
 		bCount++
@@ -155,17 +169,7 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 					continue
 				}
 
-
-				fmt.Println("passed: ", out[bCount])
-
-				if out[bCount].Name == "belt" {
-					out[bCount].Name = ""
-					if len(b.BeltLevel) > 0 {
-						out[bCount].Name = b.BeltLevel + "-"
-					}
-
-					out[bCount].Name += "transport-belt"
-				}
+				out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
 
 				bCount++
 			}
@@ -173,4 +177,39 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 	}
 
 	return out[:bCount]
+}
+
+
+func (b *Bot) newSmelters(maxInput float64) []Building {
+	beltMax := 15.0
+	if b.BeltLevel == "fast" {
+		beltMax = 30.0
+	}
+
+	if maxInput > beltMax {
+		return []Building{}
+	}
+
+	furnaceCount := int(math.Ceil(48.0 * (maxInput/beltMax) / 2.0)) // Divided by 2, since 2 are in 1 bp
+	fmt.Println(furnaceCount)
+
+	out := make([]Building, len(smeltingHeaderBp.Buildings) + furnaceCount * len(smeltingBp.Buildings))
+
+	bCount := 0
+	for _, building := range smeltingHeaderBp.Buildings {
+		out[bCount] = building
+		out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
+		bCount++
+	}
+
+	for i:=0; i < furnaceCount; i++ {
+		for _, building := range smeltingBp.Buildings {
+			out[bCount] = building
+			out[bCount].Pos.X += float64(i) * smeltingBp.Dims.X + smeltingHeaderBp.Dims.X
+			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
+			bCount++
+		}
+	}
+
+	return out
 }
