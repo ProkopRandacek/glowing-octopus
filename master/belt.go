@@ -101,3 +101,11 @@ func (m *Mapper) FindBeltPath(from, to Position) []Tile {
 	}
 	return tilePath
 }
+
+func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
+	bp := []Building{}
+	for _, t := range tiles {
+		bp = append(bp, Building{bot.resolveBuildingName("belt"),t.Dir,"",t.Pos})
+	}
+	return bp
+}
