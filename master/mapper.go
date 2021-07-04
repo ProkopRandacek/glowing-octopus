@@ -127,16 +127,28 @@ func (m *Mapper) readResources(r map[string][]Position) {
 	m.calcUnsafe()
 }
 
-// returns true, if dims is available
-func (m *Mapper) canAlloc(b Box) bool {
-	const gap = 5 // how much space to keep between allocated areas (for belts and stuff)
+func (m *Mapper) isTileEmpty(p Position) bool {
 	for _, t := range m.Areas {
 		a := t.Dims
 
-		if !((b.Tl.X - a.Br.X) > gap ||
-			(b.Br.X - a.Tl.X) < -gap ||
-			(b.Tl.Y - a.Br.Y) > gap ||
-			(b.Br.Y - a.Tl.Y) < -gap) {
+		if !(p.X < a.Tl.X || a.Br.X < p.X ||
+			p.Y < a.Tl.Y || a.Br.Y < p.Y) {
+			return false
+		}
+	}
+	return true
+}
+
+// returns true, if dims is available
+func (m *Mapper) canAlloc(b Box) bool {
+	const gap = 7 // how much space to keep between allocated areas (for belts and stuff)
+	for _, t := range m.Areas {
+		a := t.Dims
+
+		if !((b.Tl.X-a.Br.X) > gap ||
+			(b.Br.X-a.Tl.X) < -gap ||
+			(b.Tl.Y-a.Br.Y) > gap ||
+			(b.Br.Y-a.Tl.Y) < -gap) {
 			return false
 		}
 	}

@@ -107,42 +107,42 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
 
-	out := make([]Building, wcount * hcount * len(minerBp.Buildings) + hcount + wcount) // count of bps * buildings in bp + additional poles
+	out := make([]Building, wcount*hcount*len(minerBp.Buildings)+hcount+wcount) // count of bps * buildings in bp + additional poles
 	bCount := 0
 
-	for h:=0; h < hcount; h++ { // add poles on the left
+	for h := 0; h < hcount; h++ { // add poles on the left
 		out[bCount] = Building{
-			"small-electric-pole", up, "",
-			Position{patch.Dims.Tl.X - 1, float64(h) * minerBp.Dims.Y + patch.Dims.Tl.Y}}
+			"small-electric-pole", dirNorth, "",
+			Position{patch.Dims.Tl.X - 1, float64(h)*minerBp.Dims.Y + patch.Dims.Tl.Y}}
 
 		bCount++
 	}
 
-	for w:=0; w < wcount; w++ { // add poles connecting all collumns
+	for w := 0; w < wcount; w++ { // add poles connecting all collumns
 		out[bCount] = Building{
-			"small-electric-pole", up, "",
-			Position{float64(w) * minerBp.Dims.X + patch.Dims.Tl.X, patch.Dims.Tl.Y - 1}}
+			"small-electric-pole", dirNorth, "",
+			Position{float64(w)*minerBp.Dims.X + patch.Dims.Tl.X, patch.Dims.Tl.Y - 1}}
 
 		bCount++
 	}
 
-	for w:=0; w < wcount; w++ {
-		for h:=0; h < hcount; h++ {
+	for w := 0; w < wcount; w++ {
+		for h := 0; h < hcount; h++ {
 
 			for _, building := range minerBp.Buildings {
 				out[bCount] = building
-				out[bCount].Pos.X += float64(w) * minerBp.Dims.X + patch.Dims.Tl.X
-				out[bCount].Pos.Y += float64(h) * minerBp.Dims.Y + patch.Dims.Tl.Y
+				out[bCount].Pos.X += float64(w)*minerBp.Dims.X + patch.Dims.Tl.X
+				out[bCount].Pos.Y += float64(h)*minerBp.Dims.Y + patch.Dims.Tl.Y
 
 				if out[bCount].Name == "belt" {
 					out[bCount].Name = ""
 					if len(b.BeltLevel) > 0 {
 						out[bCount].Name = b.BeltLevel + "-"
 					}
-  
+
 					out[bCount].Name += "transport-belt"
 				}
-  
+
 				bCount++
 			}
 		}

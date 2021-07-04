@@ -83,11 +83,25 @@ end
 --- =================== ---
 
 function mark_area(color, text, x1, y1, x2, y2)
+	if x1 > x2 or y1 > y2 then
+		game.print("wrong corners")
+	end
 	rendering.draw_rectangle{
 		color = color,
-		filled = true,
+		filled = false,
 		left_top = {x1, y1},
 		right_bottom = {x2, y2},
+		time_to_live = 600,
+		surface = surface,
+	}
+end
+
+function mark_pos(color, text, x, y)
+	rendering.draw_circle{
+		color = color,
+		filled = true,
+		radius = 0.3,
+		target = {x, y},
 		time_to_live = 600,
 		surface = surface,
 	}
@@ -382,12 +396,15 @@ commands.add_command("build", nil, function(command)
 end)
 
 commands.add_command("drawbox", nil, function(command)
-	if (check_busy()) then
-		game.print("im busy")
-	else
-		local a = game.json_to_table(command.parameter)
-		mark_area(a.color, nil, a.x1, a.y1, a.x2, a.y2)
-	end
+	local a = game.json_to_table(command.parameter)
+	game.print("drawbox!")
+	mark_area(a.color, nil, a.x1, a.y1, a.x2, a.y2)
+end)
+
+commands.add_command("drawpoint", nil, function(command)
+	local a = game.json_to_table(command.parameter)
+	game.print("drawbox!")
+	mark_pos(a.color, nil, a.x, a.y)
 end)
 
 commands.add_command("craft", nil, function(command)

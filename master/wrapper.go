@@ -71,6 +71,10 @@ func (b *Bot) drawBox(box Box, color Color) {
 	b.conn.Execute(fmt.Sprintf(`/drawbox {"color":[%2.f, %2.f, %2.f, 0.2],"x1":%2.f,"y1":%2.f,"x2":%2.f,"y2":%2.f}`, color.R, color.G, color.B, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
+func (b *Bot) drawPoint(pos Position, color Color) {
+	b.conn.Execute(fmt.Sprintf(`/drawpoint {"color":[%2.f, %2.f, %2.f, 0.2],"x":%2.f,"y":%2.f}`, color.R, color.G, color.B, pos.X, pos.Y))
+}
+
 func (b *Bot) craft(r string, c int) {
 	b.conn.Execute(fmt.Sprintf(`/craft {"recipe":"%s","count":%d}`, r, c))
 }

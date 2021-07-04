@@ -15,25 +15,25 @@ func main() {
 		pass = os.Args[2]
 	}
 
-	bot, err := newBot(addr, pass)
+	err := newBot(addr, pass) // bot is global
 	if err != nil {
 		fmt.Println("could not initialize bot")
 		fmt.Println(err.Error())
 		return
 	}
 
-	//bot.clearAll(Box{Position{-70,-20}, Position{20,20}}) // mine the ship
+	A := Box{Position{0, 0}, Position{10, 10}}
 
-	resrcs, err := bot.getResources(Box{Position{-100, -100}, Position{100, 100}}) // get the start area ores
-	if err != nil {
-		fmt.Println("could not get the resources")
-		fmt.Println(err.Error())
-		return
+	for i := 0; i < 50; i++ {
+		B := A
+		bot.Mapper.findSpace(&B)
+		bot.drawBox(B, Color{0, 0, 1})
+		bot.Mapper.alloc(B)
 	}
-	bot.Mapper.readResources(resrcs)
 
-	fmt.Println(bot.Mapper.OrePatches)
+	path := bot.Mapper.FindBeltPath(Position{-18, 13}, Position{7, -19})
 
-	//bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
-	bot.build(bot.newMiners(bot.Mapper.OrePatches["copper-ore"][0]))
+	for _, k := range path {
+		bot.drawPoint(k.Pos, Color{1, 1, 1})
+	}
 }

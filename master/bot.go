@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+var bot = Bot{}
+
 type State struct { // Lua bot internal representation
 	Pos            Position `json:"position"`
 	Walking        bool     `json:"walking_state"`
@@ -31,22 +33,20 @@ type Bot struct {
 	BeltLevel      string
 }
 
-func newBot(address, password string) (Bot, error) {
-	bot := Bot{}
-
+func newBot(address, password string) error {
 	err := loadRecipes()
 	if err != nil {
-		return bot, err
+		return err
 	}
 
 	bot.conn, err = rcon.Dial(address)
 	if err != nil {
-		return bot, err
+		return err
 	}
 
 	err = bot.conn.Authenticate(password)
 	if err != nil {
-		return bot, err
+		return err
 	}
 
 	bot.Mapper = Mapper{}
@@ -77,7 +77,7 @@ func newBot(address, password string) (Bot, error) {
 	bot.AssemblerLevel = 1
 	bot.BeltLevel = ""
 
-	return bot, nil
+	return nil
 }
 
 func (b *Bot) state() State {

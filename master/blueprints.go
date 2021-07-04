@@ -229,13 +229,13 @@ var fluidBp = Blueprint{
 	},
 }
 
-var minerBp = Blueprint {
+var minerBp = Blueprint{
 	Position{8, 3},
-/*
-MMMBMMMP
-MMMBMMM
-MMMBMMM
-*/
+	/*
+	   MMMBMMMP
+	   MMMBMMM
+	   MMMBMMM
+	*/
 	[]Building{
 		Building{
 			"electric-mining-drill",
