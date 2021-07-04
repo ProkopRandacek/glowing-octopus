@@ -37,7 +37,9 @@ func main() {
 		bot.drawPoint(t.Pos, Color{0, 1, 0})
 	}
 
-	bp := bot.Mapper.TileArrayToBP(path)
+	//bp := bot.Mapper.TileArrayToBP(path)
 
-	bot.build(bp)
+	//bot.build(bp)
+
+	bot.runShell()
 }

@@ -4,4 +4,5 @@ factorio.tar.xz
 factorio/
 map.zip
 master/script-output
-go.sum
+slave_1.0.0/slave_1.0.0
+slave_1.0.0/mod-list.json
