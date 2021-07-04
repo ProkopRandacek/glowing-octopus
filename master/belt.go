@@ -105,7 +105,7 @@ func (m *Mapper) FindBeltPath(from, to Position) []Tile {
 		return nil
 	}
 	tilePath := []Tile{}
-	for _, v := range path {
+	for _, v := range path[1:len(path)-1] {
 		tilePath = append(tilePath, v.(Tile))
 	}
 	return tilePath
