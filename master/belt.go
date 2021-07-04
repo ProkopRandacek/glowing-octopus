@@ -115,6 +115,7 @@ func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 	bp := []Building{}
 	wasLastUg := false
 	for _, t := range tiles {
+		typ := "input"
 		name := "transport-belt"
 		if t.Ug {
 			name = "underground-belt"
@@ -122,11 +123,13 @@ func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 		} else if wasLastUg {
 			name = "underground-belt"
 			wasLastUg = false
+			typ = "output"
 		}
 		bp = append(bp, Building{
 			Name:     name,
 			Rotation: t.Dir,
 			Pos:      t.Pos,
+			Ugbt:     typ,
 		})
 	}
 	return bp

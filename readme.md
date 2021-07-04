@@ -28,7 +28,8 @@ Autonomous Factorio bot.
   - [x] Read exported map and generate lookup maps
   - [ ] Check for patch intersections and somehow resolve them
   - [x] Area allocating / deallocating
-  - [ ] Belt path finding
+  - [x] Belt path finding
+    - [ ] Starts / Ends are a little weird
 - [ ] Tasks
   - [ ] Task lists
   - [ ] Task dependencies
