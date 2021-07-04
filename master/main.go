@@ -30,10 +30,12 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
+	fmt.Println(resrcs)
 	bot.Mapper.readResources(resrcs)
 
-	fmt.Println(bot.Mapper.OrePatches)
+	fmt.Println(bot.Mapper.Resrcs)
 
-	//bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
+	bot.clearAll(bot.Mapper.OrePatches["copper-ore"][0].Dims)
+	//bot.waitForTaskDone()
 	bot.build(bot.newMiners(bot.Mapper.OrePatches["copper-ore"][0]))
 }

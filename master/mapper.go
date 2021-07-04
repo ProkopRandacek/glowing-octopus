@@ -70,8 +70,15 @@ func (o *OrePatch) isUnsafe(boxes []Box) {
 	o.Unsafe = false
 }
 
-func findComponents(tiles []Position) (boxes []OrePatch) { // divide graph into components but only store component bounds
+func findComponents(tilesOrig []Position) (boxes []OrePatch) { // divide graph into components but only store component bounds
 	pos := Position{}
+
+	tiles := make([]Position, len(tilesOrig))
+
+	for i := range tilesOrig {
+		tiles[i] = tilesOrig[i]
+	}
+
 	for len(tiles) > 0 { // iterate over all positions
 		pos, tiles = tiles[0], tiles[1:]                                               // pop firts value
 		seen := []Position{pos}                                                        // make this a set?

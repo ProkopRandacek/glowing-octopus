@@ -103,6 +103,21 @@ func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
 	return out, nil
 }
 
+func (b *Bot) shouldBuildMiner(mPos Position) bool {
+	for _, tiles := range b.Mapper.Resrcs {
+		for _, tile := range tiles {
+			if math.Abs(tile.X) >= math.Abs(mPos.X) - 1.5 &&
+				math.Abs(tile.Y) >= math.Abs(mPos.Y) - 1.5 &&
+				math.Abs(tile.X) <= math.Abs(mPos.X) + 1.5 &&
+				math.Abs(tile.Y) >= math.Abs(mPos.Y) + 1.5 {
+					return true
+				}
+		}
+	}
+
+	return false
+}
+
 func (b *Bot) newMiners(patch OrePatch) []Building {
 	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
@@ -134,6 +149,15 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 				out[bCount].Pos.X += float64(w)*minerBp.Dims.X + patch.Dims.Tl.X
 				out[bCount].Pos.Y += float64(h)*minerBp.Dims.Y + patch.Dims.Tl.Y
 
+				if building.Name == "electric-mining-drill" && !b.shouldBuildMiner(out[bCount].Pos) {
+					fmt.Println(out[bCount])
+					bCount--
+					continue
+				}
+
+
+				fmt.Println("passed: ", out[bCount])
+
 				if out[bCount].Name == "belt" {
 					out[bCount].Name = ""
 					if len(b.BeltLevel) > 0 {
@@ -148,5 +172,5 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 		}
 	}
 
-	return out
+	return out[:bCount]
 }
