@@ -11,46 +11,51 @@ import (
 
 type Tile struct {
 	Pos     Position
-	UgEnter bool // undereground belt flags
-	UgExit  bool
+	Ug bool // undereground belt flags
 	UgLen   int // only set for exit underground belts
 	Dir     int
 }
 
 const (
-	UgBeltLen = 4
+	UgBeltLen = 6
 )
 
-func (t *Tile) Up() Tile    { return Tile{Position{t.Pos.X, t.Pos.Y - 1}, false, false, 0, dirSouth} }
-func (t *Tile) Right() Tile { return Tile{Position{t.Pos.X + 1, t.Pos.Y}, false, false, 0, dirWest} }
-func (t *Tile) Down() Tile  { return Tile{Position{t.Pos.X, t.Pos.Y + 1}, false, false, 0, dirNorth} }
-func (t *Tile) Left() Tile  { return Tile{Position{t.Pos.X - 1, t.Pos.Y}, false, false, 0, dirEast} }
+func (t *Tile) Up() Tile    { return Tile{Position{t.Pos.X, t.Pos.Y - 1}, false, 0, dirSouth} }
+func (t *Tile) Right() Tile { return Tile{Position{t.Pos.X + 1, t.Pos.Y}, false, 0, dirWest} }
+func (t *Tile) Down() Tile  { return Tile{Position{t.Pos.X, t.Pos.Y + 1}, false, 0, dirNorth} }
+func (t *Tile) Left() Tile  { return Tile{Position{t.Pos.X - 1, t.Pos.Y}, false, 0, dirEast} }
 
 // Generates underground enters that exit on this tile with this direction
-/*func (t* Tile) Underground() Tile {
+func (t* Tile) Underground() []Tile {
 	out := []Tile{}
 
 	xo := 0.0
 	yo := 0.0
 
 	if t.Dir == dirSouth {
-		yo = 1
+		yo = -1
 	} else if t.Dir == dirWest {
-		xo = -1
+		xo = 1
 	} else if t.Dir == dirNorth {
-
+		yo = 1
+	} else if t.Dir == dirEast {
+		xo = -1
 	}
 
 	for i := 2; i < UgBeltLen; i++ {
-		out = append(out, Tile{Position{
+		out = append(out, Tile{Position{t.Pos.X + xo * float64(i), t.Pos.Y + yo * float64(i)}, true, i, t.Dir})
 	}
-}*/
+	return out
+}
 
 func (t *Tile) IsEmpty() bool {
 	return bot.Mapper.isTileEmpty(t.Pos)
 }
 
 func (t Tile) PathNeighborCost(to astar.Pather) float64 {
+	if t.Dir != to.(Tile).Dir { // prefer straight lines
+		return 2
+	}
 	return 1
 }
 
@@ -62,14 +67,13 @@ func (t Tile) PathEstimatedCost(to astar.Pather) float64 {
 }
 
 func (from Tile) ValidNeighbor(to Tile) bool {
-	if from.UgExit { // if the belt is supposed to be after an exit from undergound
+	if from.Ug || to.Ug { // if the belt is supposed to be after an exit from undergound
 		if from.Dir != to.Dir { // its direction has to be the same
 			return false
 		}
-	} else if to.UgEnter { // if the belt is supposed to be in front of an underground enter
-		if from.Dir != to.Dir { // the direction has to be the same
-			return false
-		}
+	}
+	if from.Ug && to.Ug { // cant go from ug straight into another ug
+		return false
 	}
 	if !to.IsEmpty() { // if the position is not empty. This is the most expensive check so it's at the end
 		return false
@@ -79,6 +83,11 @@ func (from Tile) ValidNeighbor(to Tile) bool {
 
 func (t Tile) PathNeighbors() []astar.Pather {
 	out := []astar.Pather{}
+	for _, n := range t.Underground() {
+		if t.ValidNeighbor(n) {
+			out = append(out, n)
+		}
+	}
 	for _, n := range []astar.Pather{t.Up(), t.Right(), t.Down(), t.Left()} {
 		if t.ValidNeighbor(n.(Tile)) {
 			out = append(out, n)
@@ -88,8 +97,8 @@ func (t Tile) PathNeighbors() []astar.Pather {
 }
 
 func (m *Mapper) FindBeltPath(from, to Position) []Tile {
-	fromTile := Tile{from, false, false, 0, 0}
-	toTile := Tile{to, false, false, 0, 0}
+	fromTile := Tile{from, false, 0, 0}
+	toTile := Tile{to, false, 0, 0}
 	path, _, found := astar.Path(toTile, fromTile)
 	if !found {
 		fmt.Println("Could not find a path")
@@ -104,8 +113,17 @@ func (m *Mapper) FindBeltPath(from, to Position) []Tile {
 
 func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 	bp := []Building{}
+	wasLastUg := false
 	for _, t := range tiles {
-		bp = append(bp, Building{bot.resolveBuildingName("belt"),t.Dir,"",t.Pos})
+		name := "transport-belt"
+		if t.Ug {
+			name = "underground-belt"
+			wasLastUg = true
+		} else if wasLastUg {
+			name = "underground-belt"
+			wasLastUg = false
+		}
+		bp = append(bp, Building{name, t.Dir, "", t.Pos})
 	}
 	return bp
 }

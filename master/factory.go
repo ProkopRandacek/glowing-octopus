@@ -29,6 +29,7 @@ type Building struct {
 	Rotation  int      `json:"rotation"`
 	CraftItem string   `json:"recipe"`
 	Pos       Position `json:"pos"`
+	Ugbt	string	`json:"ugbt"`
 }
 
 func loadRecipes() error {

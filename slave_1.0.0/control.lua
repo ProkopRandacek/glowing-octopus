@@ -23,6 +23,7 @@ local placing = false
 local placing_item = nil
 local placing_pos = nil
 local placing_dir = nil
+local placing_ugbt = nil -- underground belt type
 
 local puting = false
 local puting_pos = nil
@@ -221,15 +222,15 @@ function clear(area, t)
 	clearing = true
 end
 
-function place(pos, item, dir, recipe) -- just place it
+function place(pos, item, dir, recipe, ugbt) -- just place it
 	-- Check if we can actually place the item at this tile
 	local placed = false
 
-	if surface.can_place_entity{name=item, position=pos, direction=direction} then
-		if surface.can_fast_replace{name=item, position=pos, direction=dir, force="player"} then
-			placed = surface.create_entity{name=item, position=pos, direction=dir, recipe=recipe, force="player", fast_replace=true, player=bot}
+	if surface.can_place_entity{name=item, position=pos, direction=direction, type=ugbt} then
+		if surface.can_fast_replace{name=item, position=pos, direction=dir, force="player", type=ugbt} then
+			placed = surface.create_entity{name=item, position=pos, direction=dir, recipe=recipe, force="player", fast_replace=true, player=bot, type=ugbt}
 		else
-			placed = surface.create_entity{name=item, position=pos, direction=dir, recipe=recipe, force="player"}
+			placed = surface.create_entity{name=item, position=pos, direction=dir, recipe=recipe, force="player", type=ugbt}
 		end
 	else
 		game.print("cannot place: " .. item .. " at " .. game.table_to_json(pos))
@@ -242,7 +243,7 @@ function place(pos, item, dir, recipe) -- just place it
 	return true
 end
 
-function place_safe(pos, item, dir, recipe) -- walk there and then place it
+function place_safe(pos, item, dir, recipe, ugbt) -- walk there and then place it
 	if bot.get_item_count(item) == 0 then
 		game.print("cant place " .. item .. " because i dont have it")
 		return
@@ -255,6 +256,7 @@ function place_safe(pos, item, dir, recipe) -- walk there and then place it
 	placing_pos = pos
 	placing_dir = dir
 	placing_recipe = recipe
+	placing_ugbt = ugbt
 end
 
 -- slot: https://lua-api.factorio.com/latest/defines.html#defines.inventory
@@ -382,7 +384,7 @@ commands.add_command("place", nil, function(command)
 	else
 		local a = game.json_to_table(command.parameter)
 		if a.dir == nil then a.dir = 0 end
-		place_safe(a.pos, a.item, a.dir)
+		place_safe(a.pos, a.item, a.dir, a.ugbt)
 	end
 end)
 
@@ -513,7 +515,7 @@ script.on_event(defines.events.on_tick, function(event)
 			game.print("mining done")
 		end
 	elseif placing then
-		place(placing_pos, placing_item, placing_dir, placing_recipe)
+		place(placing_pos, placing_item, placing_dir, placing_recipe, placing_ugbt)
 		placing = false
 	elseif building then
 		if #building_queue == 0 then
@@ -524,7 +526,9 @@ script.on_event(defines.events.on_tick, function(event)
 				game.print("building_queue is a string instead of a stable O.o") -- this happens for some reason
 			else
 				b = table.remove(building_queue, 1)
-				place_safe({b.pos.x, b.pos.y}, b.name, b.rotation, b.recipe)
+				if b.rotation == nil then b.rotation = 0 end
+				if b.ugbt == nil then b.ugbt = "input" end
+				place_safe({b.pos.x, b.pos.y}, b.name, b.rotation, b.recipe, b.ugbt)
 			end
 		end
 	elseif clearing then
