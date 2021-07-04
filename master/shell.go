@@ -1,8 +1,8 @@
 package main
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/lmorg/readline"
 )
@@ -22,19 +22,19 @@ var commands = []string{
 	"build",
 }
 
-var help = map[string]string {
-	"writeresrc": "[ [min_x, min_y], [max_x, max_y] ]",
-	"walkto": "[ x, y ]",
-	"drawbox": "{ \"color\": [ r, g, b ], \"x1\", \"y1\", \"x2\", \"y2\"}",
-	"drawpoint": "{ \"color\": [ r, g, b ], \"x\", \"y\"}",
-	"craft": "{ \"recipe\", \"count\"}",
-	"mine": "[ x, y ]",
+var help = map[string]string{
+	"writeresrc":   "[ [min_x, min_y], [max_x, max_y] ]",
+	"walkto":       "[ x, y ]",
+	"drawbox":      "{ \"color\": [ r, g, b ], \"x1\", \"y1\", \"x2\", \"y2\"}",
+	"drawpoint":    "{ \"color\": [ r, g, b ], \"x\", \"y\"}",
+	"craft":        "{ \"recipe\", \"count\"}",
+	"mine":         "[ x, y ]",
 	"mineresource": "{ \"pos\": [ x, y ], \"amount\", \"name\" }",
-	"cleararea": "{ \"area\": [ [min_x, min_y], [max_x, max_y] ], \"t\": \"all\"/\"nature\"}",
-	"place": "{ \"pos\": [ x, y ], \"item\" }",
-	"put": "{ \"pos\": [ x, y ], \"item\", \"amount\", \"slot\" }",
-	"take": "{ \"pos\": [ x, y ], \"item\", \"amount\", \"slot\" }",
-	"build": "{ TODO }",
+	"cleararea":    "{ \"area\": [ [min_x, min_y], [max_x, max_y] ], \"t\": \"all\"/\"nature\"}",
+	"place":        "{ \"pos\": [ x, y ], \"item\" }",
+	"put":          "{ \"pos\": [ x, y ], \"item\", \"amount\", \"slot\" }",
+	"take":         "{ \"pos\": [ x, y ], \"item\", \"amount\", \"slot\" }",
+	"build":        "{ TODO }",
 }
 
 func tabCompleter(text []rune, pos int, dtc readline.DelayedTabContext) (string, []string, map[string]string, readline.TabDisplayType) {

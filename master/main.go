@@ -31,7 +31,7 @@ func main() {
 		bot.Mapper.alloc(B)
 	}*/
 
-	path := bot.Mapper.FindBeltPath(Position{11,-40}, Position{-39, 33})
+	path := bot.Mapper.FindBeltPath(Position{11, -40}, Position{-39, 33})
 
 	for _, t := range path {
 		bot.drawPoint(t.Pos, Color{0, 1, 0})

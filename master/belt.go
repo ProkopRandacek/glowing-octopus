@@ -10,10 +10,10 @@ import (
 )
 
 type Tile struct {
-	Pos     Position
-	Ug bool // undereground belt flags
-	UgLen   int // only set for exit underground belts
-	Dir     int
+	Pos   Position
+	Ug    bool // undereground belt flags
+	UgLen int  // only set for exit underground belts
+	Dir   int
 }
 
 const (
@@ -26,7 +26,7 @@ func (t *Tile) Down() Tile  { return Tile{Position{t.Pos.X, t.Pos.Y + 1}, false,
 func (t *Tile) Left() Tile  { return Tile{Position{t.Pos.X - 1, t.Pos.Y}, false, 0, dirEast} }
 
 // Generates underground enters that exit on this tile with this direction
-func (t* Tile) Underground() []Tile {
+func (t *Tile) Underground() []Tile {
 	out := []Tile{}
 
 	xo := 0.0
@@ -43,7 +43,7 @@ func (t* Tile) Underground() []Tile {
 	}
 
 	for i := 2; i < UgBeltLen; i++ {
-		out = append(out, Tile{Position{t.Pos.X + xo * float64(i), t.Pos.Y + yo * float64(i)}, true, i, t.Dir})
+		out = append(out, Tile{Position{t.Pos.X + xo*float64(i), t.Pos.Y + yo*float64(i)}, true, i, t.Dir})
 	}
 	return out
 }
@@ -123,7 +123,11 @@ func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 			name = "underground-belt"
 			wasLastUg = false
 		}
-		bp = append(bp, Building{name, t.Dir, "", t.Pos})
+		bp = append(bp, Building{
+			Name:     name,
+			Rotation: t.Dir,
+			Pos:      t.Pos,
+		})
 	}
 	return bp
 }

@@ -31,7 +31,7 @@ type Bot struct {
 	InserterLevel  string
 	AssemblerLevel int
 	BeltLevel      string
-	FurnaceLevel string
+	FurnaceLevel   string
 }
 
 func newBot(address, password string) error {

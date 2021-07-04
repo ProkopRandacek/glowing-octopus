@@ -29,7 +29,7 @@ type Building struct {
 	Rotation  int      `json:"rotation"`
 	CraftItem string   `json:"recipe"`
 	Pos       Position `json:"pos"`
-	Ugbt	string	`json:"ugbt"`
+	Ugbt      string   `json:"ugbt"`
 }
 
 func loadRecipes() error {
@@ -51,7 +51,6 @@ func loadRecipes() error {
 
 	return nil
 }
-
 
 func (b *Bot) resolveBuildingName(curr string) string {
 	switch curr {
@@ -125,12 +124,12 @@ func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
 func (b *Bot) shouldBuildMiner(mPos Position) bool {
 	for _, tiles := range b.Mapper.Resrcs {
 		for _, tile := range tiles {
-			if math.Abs(tile.X) >= math.Abs(mPos.X) - 1.5 &&
-				math.Abs(tile.Y) >= math.Abs(mPos.Y) - 1.5 &&
-				math.Abs(tile.X) <= math.Abs(mPos.X) + 1.5 &&
-				math.Abs(tile.Y) >= math.Abs(mPos.Y) + 1.5 {
-					return true
-				}
+			if math.Abs(tile.X) >= math.Abs(mPos.X)-1.5 &&
+				math.Abs(tile.Y) >= math.Abs(mPos.Y)-1.5 &&
+				math.Abs(tile.X) <= math.Abs(mPos.X)+1.5 &&
+				math.Abs(tile.Y) >= math.Abs(mPos.Y)+1.5 {
+				return true
+			}
 		}
 	}
 
@@ -141,21 +140,23 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
 
-	out := make([]Building, wcount * hcount * len(minerBp.Buildings) + hcount + wcount) // count of bps * buildings in bp + additional poles
+	out := make([]Building, wcount*hcount*len(minerBp.Buildings)+hcount+wcount) // count of bps * buildings in bp + additional poles
 	bCount := 0
 
-	for h:=0; h < hcount; h++ { // add poles on the left
+	for h := 0; h < hcount; h++ { // add poles on the left
 		out[bCount] = Building{
-			"small-electric-pole", dirNorth, "",
-			Position{patch.Dims.Tl.X - 1, float64(h) * minerBp.Dims.Y + patch.Dims.Tl.Y}}
+			Name:     "small-electric-pole",
+			Rotation: dirNorth,
+			Pos:      Position{patch.Dims.Tl.X - 1, float64(h)*minerBp.Dims.Y + patch.Dims.Tl.Y}}
 
 		bCount++
 	}
 
 	for w := 0; w < wcount; w++ { // add poles connecting all collumns
 		out[bCount] = Building{
-			"small-electric-pole", dirNorth, "",
-			Position{float64(w)*minerBp.Dims.X + patch.Dims.Tl.X, patch.Dims.Tl.Y - 1}}
+			Name:     "small-electric-pole",
+			Rotation: dirNorth,
+			Pos:      Position{float64(w)*minerBp.Dims.X + patch.Dims.Tl.X, patch.Dims.Tl.Y - 1}}
 
 		bCount++
 	}
@@ -184,7 +185,6 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 	return out[:bCount]
 }
 
-
 func (b *Bot) newSmelters(maxInput float64) []Building {
 	beltMax := 15.0
 	if b.BeltLevel == "fast" {
@@ -195,10 +195,10 @@ func (b *Bot) newSmelters(maxInput float64) []Building {
 		return []Building{}
 	}
 
-	furnaceCount := int(math.Ceil(48.0 * (maxInput/beltMax) / 2.0)) // Divided by 2, since 2 are in 1 bp
+	furnaceCount := int(math.Ceil(48.0 * (maxInput / beltMax) / 2.0)) // Divided by 2, since 2 are in 1 bp
 	fmt.Println(furnaceCount)
 
-	out := make([]Building, len(smeltingHeaderBp.Buildings) + furnaceCount * len(smeltingBp.Buildings))
+	out := make([]Building, len(smeltingHeaderBp.Buildings)+furnaceCount*len(smeltingBp.Buildings))
 
 	bCount := 0
 	for _, building := range smeltingHeaderBp.Buildings {
@@ -207,10 +207,10 @@ func (b *Bot) newSmelters(maxInput float64) []Building {
 		bCount++
 	}
 
-	for i:=0; i < furnaceCount; i++ {
+	for i := 0; i < furnaceCount; i++ {
 		for _, building := range smeltingBp.Buildings {
 			out[bCount] = building
-			out[bCount].Pos.X += float64(i) * smeltingBp.Dims.X + smeltingHeaderBp.Dims.X
+			out[bCount].Pos.X += float64(i)*smeltingBp.Dims.X + smeltingHeaderBp.Dims.X
 			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
 			bCount++
 		}
