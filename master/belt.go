@@ -16,17 +16,17 @@ type Tile struct {
 	Dir   int
 }
 
-const (
-	UgBeltLen = 6
-)
-
-func (t *Tile) Up() Tile    { return Tile{Position{t.Pos.X, t.Pos.Y - 1}, false, 0, dirSouth} }
-func (t *Tile) Right() Tile { return Tile{Position{t.Pos.X + 1, t.Pos.Y}, false, 0, dirWest} }
-func (t *Tile) Down() Tile  { return Tile{Position{t.Pos.X, t.Pos.Y + 1}, false, 0, dirNorth} }
-func (t *Tile) Left() Tile  { return Tile{Position{t.Pos.X - 1, t.Pos.Y}, false, 0, dirEast} }
+func (t *Tile) Direct() {
+	return []Tile{
+		Tile{Position{t.Pos.X, t.Pos.Y - 1}, false, 0, dirSouth},
+		Tile{Position{t.Pos.X + 1, t.Pos.Y}, false, 0, dirWest},
+		Tile{Position{t.Pos.X, t.Pos.Y + 1}, false, 0, dirNorth},
+		Tile{Position{t.Pos.X - 1, t.Pos.Y}, false, 0, dirEast},
+	}
+}
 
 // Generates underground enters that exit on this tile with this direction
-func (t *Tile) Underground() []Tile {
+func (t *Tile) Underground(maxBeltLen int) []Tile {
 	out := []Tile{}
 
 	xo := 0.0
@@ -42,7 +42,7 @@ func (t *Tile) Underground() []Tile {
 		xo = -1
 	}
 
-	for i := 2; i < UgBeltLen; i++ {
+	for i := 2; i < maxBeltLen; i++ {
 		out = append(out, Tile{Position{t.Pos.X + xo*float64(i), t.Pos.Y + yo*float64(i)}, true, i, t.Dir})
 	}
 	return out
@@ -83,13 +83,16 @@ func (from Tile) ValidNeighbor(to Tile) bool {
 
 func (t Tile) PathNeighbors() []astar.Pather {
 	out := []astar.Pather{}
-	for _, n := range t.Underground() {
-		if t.ValidNeighbor(n) {
-			out = append(out, n)
-		}
+
+	maxBeltLen := 6
+	if bot.BeltLevel == "fast" {
+		maxBeltLen = 8
+	} else if bot.BeltLevel == "express" {
+		maxBeltLen = 10
 	}
-	for _, n := range []astar.Pather{t.Up(), t.Right(), t.Down(), t.Left()} {
-		if t.ValidNeighbor(n.(Tile)) {
+
+	for _, n := range append(t.Underground(maxBeltLen), t.Direct()...) {
+		if t.ValidNeighbor(n) {
 			out = append(out, n)
 		}
 	}
@@ -105,7 +108,7 @@ func (m *Mapper) FindBeltPath(from, to Position) []Tile {
 		return nil
 	}
 	tilePath := []Tile{}
-	for _, v := range path[1:len(path)-1] {
+	for _, v := range path[1 : len(path)-1] {
 		tilePath = append(tilePath, v.(Tile))
 	}
 	return tilePath

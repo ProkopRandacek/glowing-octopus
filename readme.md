@@ -29,7 +29,6 @@ Autonomous Factorio bot.
   - [ ] Check for patch intersections and somehow resolve them
   - [x] Area allocating / deallocating
   - [x] Belt path finding
-    - [ ] Starts / Ends are a little weird
 - [ ] Tasks
   - [ ] Task lists
   - [ ] Task dependencies
