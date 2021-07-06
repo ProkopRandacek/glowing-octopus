@@ -504,10 +504,5 @@ var smeltingFooterBp = Blueprint{
 			Rotation: dirNorth,
 			Pos: Position{0, 10},
 		},
-		Building{
-			Name: "belt",
-			Rotation: dirNorth,
-			Pos: Position{0, 11},
-		},
 	},
 }

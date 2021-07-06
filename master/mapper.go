@@ -123,6 +123,18 @@ func (m *Mapper) calcUnsafe() {
 	}
 }
 
+func (m *Mapper) allocatePatches() {
+	for i := range m.OrePatches {
+		for j := range m.OrePatches[i] {
+			if m.OrePatches[i][j].Unsafe {
+				continue
+			}
+
+			m.alloc(m.OrePatches[i][j].Dims)
+		}
+	}
+}
+
 func (m *Mapper) readResources(r map[string][]Position) {
 	for t := range m.Resrcs { // for each resource type
 		if len(r[t]) > 0 {
@@ -132,6 +144,7 @@ func (m *Mapper) readResources(r map[string][]Position) {
 	}
 	m.calcPatches()
 	m.calcUnsafe()
+	m.allocatePatches()
 }
 
 func (m *Mapper) isTileEmpty(p Position) bool {

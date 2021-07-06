@@ -191,9 +191,7 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	for key := range resources {
 		fmt.Printf("building path for resource %s from %v to %v\n", key, resources[key], Position{space.Tl.X + float64(i), space.Tl.Y-1})
 		path := b.Mapper.FindBeltPath(resources[key], Position{space.Tl.X + float64(i), space.Tl.Y-2})
-		fmt.Println("found path")
 		pathBp := b.Mapper.TileArrayToBP(path)
-		fmt.Println("generated bp")
 		b.build(pathBp)
 		b.waitForTaskDone()
 		i++
@@ -203,7 +201,7 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	b.build(out)
 	b.waitForTaskDone()
 
-	return Position{space.Br.X, space.Br.Y + 1}, nil
+	return Position{space.Br.X, space.Br.Y + 2}, nil
 }
 
 func (b *Bot) shouldBuildMiner(mPos Position) bool {
@@ -226,11 +224,8 @@ func (b *Bot) newMiners(patch OrePatch) (Position, float64) {
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
 
 	space := Box{Position{patch.Dims.Tl.X-1, patch.Dims.Tl.Y-1}, Position{patch.Dims.Br.X, patch.Dims.Br.Y + 1}}
-	b.Mapper.alloc(space)
-	fmt.Println("allocated space for miners")
-	//b.clearAll(space)
+	b.clearAll(space)
 	b.waitForTaskDone()
-	fmt.Println("cleared space for miners")
 
 	out := make([]Building, wcount*hcount*len(minerBp.Buildings) + hcount + wcount + int(math.Abs(patch.Dims.Tl.X - patch.Dims.Br.X))) // count of bps * buildings in bp + additional poles
 	bCount := 0
@@ -283,9 +278,8 @@ func (b *Bot) newMiners(patch OrePatch) (Position, float64) {
 		bCount++
 	}
 
-	//b.build(out[:bCount])
+	b.build(out[:bCount])
 	b.waitForTaskDone()
-	fmt.Println("miners built")
 
 	return space.Br, float64(minerCount * 2) // rate is 0.5/s except for uranium TODO
 }
@@ -312,7 +306,7 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 	if b.Mapper.alloc(space) < 0 {
 		return Box{}, errors.New("Could not find space to allocate")
 	}
-	//b.clearAll(space)
+	b.clearAll(space)
 	b.waitForTaskDone()
 
 	out := make([]Building, len(smeltingHeaderBp.Buildings) + furnaceCount * len(smeltingBp.Buildings) + len(smeltingFooterBp.Buildings))
@@ -344,7 +338,7 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 		bCount++
 	}
 
-	//b.build(out)
+	b.build(out)
 	b.waitForTaskDone()
 
 	return Box{Tl: Position{
