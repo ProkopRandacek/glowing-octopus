@@ -244,6 +244,10 @@ function place(pos, item, dir, recipe, ugbt) -- just place it
 end
 
 function place_safe(pos, item, dir, recipe, ugbt) -- walk there and then place it
+	if not game.item_prototypes[item] == nil then
+		game.print("'" .. item .. "' is not valid item name")
+		return
+	end
 	if bot.get_item_count(item) == 0 then
 		game.print("cant place " .. item .. " because i dont have it")
 		return

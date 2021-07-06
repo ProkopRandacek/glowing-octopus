@@ -16,7 +16,7 @@ type Tile struct {
 	Dir   int
 }
 
-func (t *Tile) Direct() {
+func (t *Tile) Direct() []Tile {
 	return []Tile{
 		Tile{Position{t.Pos.X, t.Pos.Y - 1}, false, 0, dirSouth},
 		Tile{Position{t.Pos.X + 1, t.Pos.Y}, false, 0, dirWest},

@@ -266,11 +266,13 @@ var smeltingHeaderBp = Blueprint{
 			Name:     "underground-belt",
 			Rotation: dirEast,
 			Pos:      Position{0, 4},
+			Ugbt: "input",
 		},
 		Building{
 			Name:     "underground-belt",
 			Rotation: dirWest,
 			Pos:      Position{2, 4},
+			Ugbt: "output",
 		},
 		Building{
 			Name:     "belt",
@@ -400,6 +402,112 @@ var smeltingBp = Blueprint{
 			Name:     "belt",
 			Rotation: dirEast,
 			Pos:      Position{1, 10},
+		},
+	},
+}
+
+var smeltingFooterBp = Blueprint{
+	Position{9, 12},
+	[]Building {
+		Building{
+			Name: "belt",
+			Rotation: dirSouth,
+			Pos: Position{0, 0},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirSouth,
+			Pos: Position{0, 1},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirSouth,
+			Pos: Position{0, 2},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirSouth,
+			Pos: Position{0, 3},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirSouth,
+			Pos: Position{0, 4},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirSouth,
+			Pos: Position{0, 5},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{0, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{1, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{2, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{3, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{4, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{5, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{6, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{7, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirEast,
+			Pos: Position{8, 6},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirNorth,
+			Pos: Position{0, 7},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirNorth,
+			Pos: Position{0, 8},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirNorth,
+			Pos: Position{0, 9},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirNorth,
+			Pos: Position{0, 10},
+		},
+		Building{
+			Name: "belt",
+			Rotation: dirNorth,
+			Pos: Position{0, 11},
 		},
 	},
 }

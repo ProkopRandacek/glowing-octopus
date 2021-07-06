@@ -14,13 +14,14 @@ const (
 
 func (b *Bot) waitForTaskDone() { // Waits until task is done.
 	for {
-		fmt.Println("Waiting for task done")
+		log("Waiting for task done")
 		time.Sleep(2 * time.Second)
 		s := b.state()
 		if !(s.Walking || s.Mining || s.ResourceMining || s.Placing || s.Clearing || s.Building) {
 			break
 		}
 	}
+	fmt.Println()
 }
 
 func (b *Bot) getResources(box Box) (map[string][]Position, error) {

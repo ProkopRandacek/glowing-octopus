@@ -32,6 +32,7 @@ type Bot struct {
 	AssemblerLevel int
 	BeltLevel      string
 	FurnaceLevel   string
+	SharedResources map[string][]SharedDepLocation
 }
 
 func newBot(address, password string) error {
@@ -78,6 +79,8 @@ func newBot(address, password string) error {
 	bot.AssemblerLevel = 1
 	bot.BeltLevel = ""
 	bot.FurnaceLevel = "stone"
+
+	bot.SharedResources = map[string][]SharedDepLocation{}
 
 	return nil
 }

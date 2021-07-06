@@ -12,6 +12,12 @@ import (
 
 var recipes map[string]Item
 
+type SharedDepLocation struct {
+	Name string
+	Dims Box
+	Left float64
+}
+
 type RecipeDep struct {
 	Name        string `json:"name"`
 	Count       int    `json:"count"`
@@ -19,7 +25,7 @@ type RecipeDep struct {
 }
 
 type Item struct {
-	CraftTime float32     `json:"craftTime"` // craft_time / craft_amount
+	CraftTime float64     `json:"craftTime"` // craft_time / craft_amount
 	Liquid    bool        `json:"liquid"`
 	Deps      []RecipeDep `json:"deps"`
 }
@@ -52,6 +58,40 @@ func loadRecipes() error {
 	return nil
 }
 
+func (b *Bot) findSharedResource(item string, amount float64) (Position, error) {
+	for i, r := range b.SharedResources[item] {
+		if r.Left >= amount {
+			b.SharedResources[item][i].Dims.Tl.X++
+			b.SharedResources[item][i].Left -= amount
+			r.Dims.Tl.Y += 2
+			return r.Dims.Tl, nil
+		}
+	}
+
+	// if the code gets here, it means there wasn't found any fitting location
+
+	oreName := strings.Split(item, "-")[0]
+	if item != "coal" {
+		oreName += "-ore"
+	}
+
+	for i, p := range b.Mapper.OrePatches[oreName] {
+		pos, output := b.newMiners(p)
+		space, err := b.newSmelters(pos, output)
+		if err != nil {
+			return Position{}, err
+		}
+
+		space.Tl.X += 2
+		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, space)
+		b.SharedResources[item] = append(b.SharedResources[item], SharedDepLocation{Name: item, Dims: space, Left: output})
+		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:i], b.Mapper.OrePatches[oreName][i+1:]...)
+		return b.findSharedResource(item, amount)
+	}
+
+	return Position{}, errors.New("No patches ore resource locations found. Explore some more")
+}
+
 func (b *Bot) resolveBuildingName(curr string) string {
 	switch curr {
 	case "assembling-machine-%d":
@@ -81,31 +121,59 @@ func (b *Bot) resolveBuildingName(curr string) string {
 	return curr
 }
 
-func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
+func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	bp := noFluidBp
 	item, exists := recipes[itemStr]
 	if !exists {
-		return nil, errors.New("unknown item " + itemStr)
+		return Position{}, errors.New("unknown item " + itemStr)
 	}
 
-	for _, d := range item.Deps {
-		//if d.MakeFactory { TODO
-		b.newFactory(d.Name, ps*float32(d.Count))
-		//}
+	resources := map[string]Position{}
 
+	fmt.Println("resolvind dependencies")
+	for _, d := range item.Deps {
+		if d.Name != "iron-plate" && d.Name != "copper-plate" {
+			fmt.Printf("%s needs to be built.\n", d.Name)
+			var err error
+			resources[d.Name], err = b.newFactory(d.Name, ps*float64(d.Count))
+			if err != nil {
+				return Position{}, err
+			}
+		} else {
+			fmt.Printf("%s is shared. I will look for it.\n", d.Name)
+			var err error
+			resources[d.Name], err = b.findSharedResource(d.Name, ps * float64(d.Count))
+			if err != nil {
+				return Position{}, err
+			}
+		}
+
+		fmt.Printf("resolved dependency for %s\n", d.Name)
 		if recipes[d.Name].Liquid {
 			bp = fluidBp
 		}
 	}
 
+	fmt.Println("all dependencies resolved")
 	asmCount := int(math.Ceil(float64(ps * item.CraftTime))) // count of assemblers needed
 
 	out := make([]Building, asmCount*len(bp.Buildings))
 
+	space := Box{Tl: Position{0, 0}, Br: Position{bp.Dims.X, bp.Dims.Y * float64(asmCount)}}
+	b.Mapper.findSpace(&space)
+	if b.Mapper.alloc(space) < 0 {
+		return Position{}, errors.New("Could not find space to allocate")
+	}
+	fmt.Println("allocated space for factory")
+	b.clearAll(space)
+	b.waitForTaskDone()
+	fmt.Println("cleared space for factory")
+
 	bCount := 0 // count of building placed
 	for i := 0; i < asmCount; i++ {
 		for _, building := range bp.Buildings {
-			building.Pos.Y += bp.Dims.Y * float64(i)
+			building.Pos.Y += bp.Dims.Y * float64(i) + space.Tl.Y
+			building.Pos.X += space.Tl.X
 			out[bCount] = building
 
 			if strings.HasPrefix(out[bCount].Name, "assembling-machine") {
@@ -118,7 +186,24 @@ func (b *Bot) newFactory(itemStr string, ps float32) ([]Building, error) {
 		}
 	}
 
-	return out, nil
+
+	i := 0
+	for key := range resources {
+		fmt.Printf("building path for resource %s from %v to %v\n", key, resources[key], Position{space.Tl.X + float64(i), space.Tl.Y-1})
+		path := b.Mapper.FindBeltPath(resources[key], Position{space.Tl.X + float64(i), space.Tl.Y-2})
+		fmt.Println("found path")
+		pathBp := b.Mapper.TileArrayToBP(path)
+		fmt.Println("generated bp")
+		b.build(pathBp)
+		b.waitForTaskDone()
+		i++
+	}
+
+	fmt.Println("building factory")
+	b.build(out)
+	b.waitForTaskDone()
+
+	return Position{space.Br.X, space.Br.Y + 1}, nil
 }
 
 func (b *Bot) shouldBuildMiner(mPos Position) bool {
@@ -136,11 +221,18 @@ func (b *Bot) shouldBuildMiner(mPos Position) bool {
 	return false
 }
 
-func (b *Bot) newMiners(patch OrePatch) []Building {
+func (b *Bot) newMiners(patch OrePatch) (Position, float64) {
 	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
 
-	out := make([]Building, wcount*hcount*len(minerBp.Buildings)+hcount+wcount) // count of bps * buildings in bp + additional poles
+	space := Box{Position{patch.Dims.Tl.X-1, patch.Dims.Tl.Y-1}, Position{patch.Dims.Br.X, patch.Dims.Br.Y + 1}}
+	b.Mapper.alloc(space)
+	fmt.Println("allocated space for miners")
+	//b.clearAll(space)
+	b.waitForTaskDone()
+	fmt.Println("cleared space for miners")
+
+	out := make([]Building, wcount*hcount*len(minerBp.Buildings) + hcount + wcount + int(math.Abs(patch.Dims.Tl.X - patch.Dims.Br.X))) // count of bps * buildings in bp + additional poles
 	bCount := 0
 
 	for h := 0; h < hcount; h++ { // add poles on the left
@@ -161,6 +253,7 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 		bCount++
 	}
 
+	minerCount := 0
 	for w := 0; w < wcount; w++ {
 		for h := 0; h < hcount; h++ {
 
@@ -170,9 +263,12 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 				out[bCount].Pos.Y += float64(h)*minerBp.Dims.Y + patch.Dims.Tl.Y
 
 				if building.Name == "electric-mining-drill" && !b.shouldBuildMiner(out[bCount].Pos) {
-					fmt.Println(out[bCount])
 					bCount--
 					continue
+				}
+
+				if building.Name == "electric-mining-drill" {
+					minerCount++
 				}
 
 				out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
@@ -182,26 +278,49 @@ func (b *Bot) newMiners(patch OrePatch) []Building {
 		}
 	}
 
-	return out[:bCount]
+	for w:=patch.Dims.Tl.X; w < patch.Dims.Br.X; w++ {
+		out[bCount] = Building{Name: b.resolveBuildingName("belt"), Rotation: dirEast, Pos: Position{w, patch.Dims.Br.Y}}
+		bCount++
+	}
+
+	//b.build(out[:bCount])
+	b.waitForTaskDone()
+	fmt.Println("miners built")
+
+	return space.Br, float64(minerCount * 2) // rate is 0.5/s except for uranium TODO
 }
 
-func (b *Bot) newSmelters(maxInput float64) []Building {
+func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 	beltMax := 15.0
 	if b.BeltLevel == "fast" {
 		beltMax = 30.0
 	}
 
 	if maxInput > beltMax {
-		return []Building{}
+		//return Box{}, errors.New("Too much input for one smelting array")
+		maxInput = beltMax
 	}
 
 	furnaceCount := int(math.Ceil(48.0 * (maxInput / beltMax) / 2.0)) // Divided by 2, since 2 are in 1 bp
-	fmt.Println(furnaceCount)
 
-	out := make([]Building, len(smeltingHeaderBp.Buildings)+furnaceCount*len(smeltingBp.Buildings))
+	space := Box{Position{0, 0},
+		Position{
+			smeltingBp.Dims.X * float64(furnaceCount) + smeltingHeaderBp.Dims.X,
+			smeltingBp.Dims.Y}}
+
+	b.Mapper.findSpace(&space)
+	if b.Mapper.alloc(space) < 0 {
+		return Box{}, errors.New("Could not find space to allocate")
+	}
+	//b.clearAll(space)
+	b.waitForTaskDone()
+
+	out := make([]Building, len(smeltingHeaderBp.Buildings) + furnaceCount * len(smeltingBp.Buildings) + len(smeltingFooterBp.Buildings))
 
 	bCount := 0
 	for _, building := range smeltingHeaderBp.Buildings {
+		building.Pos.X += space.Tl.X
+		building.Pos.Y += space.Tl.Y
 		out[bCount] = building
 		out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
 		bCount++
@@ -210,11 +329,29 @@ func (b *Bot) newSmelters(maxInput float64) []Building {
 	for i := 0; i < furnaceCount; i++ {
 		for _, building := range smeltingBp.Buildings {
 			out[bCount] = building
-			out[bCount].Pos.X += float64(i)*smeltingBp.Dims.X + smeltingHeaderBp.Dims.X
+			out[bCount].Pos.X += space.Tl.X + float64(i)*smeltingBp.Dims.X + smeltingHeaderBp.Dims.X
+			out[bCount].Pos.Y += space.Tl.Y
 			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
 			bCount++
 		}
 	}
 
-	return out
+	for _, building := range smeltingFooterBp.Buildings {
+		building.Pos.X += space.Tl.X + smeltingHeaderBp.Dims.X + smeltingBp.Dims.X * float64(furnaceCount)
+		building.Pos.Y += space.Tl.Y
+		out[bCount] = building
+		out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
+		bCount++
+	}
+
+	//b.build(out)
+	b.waitForTaskDone()
+
+	return Box{Tl: Position{
+		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X * float64(furnaceCount),
+		6,
+	}, Br: Position{
+		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X * float64(furnaceCount) + smeltingFooterBp.Dims.X - 1,
+		6,
+	}}, nil
 }
