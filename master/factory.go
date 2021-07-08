@@ -142,7 +142,7 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 		} else {
 			fmt.Printf("%s is shared. I will look for it.\n", d.Name)
 			var err error
-			resources[d.Name], err = b.findSharedResource(d.Name, ps * float64(d.Count))
+			resources[d.Name], err = b.findSharedResource(d.Name, ps*float64(d.Count))
 			if err != nil {
 				return Position{}, err
 			}
@@ -172,7 +172,7 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	bCount := 0 // count of building placed
 	for i := 0; i < asmCount; i++ {
 		for _, building := range bp.Buildings {
-			building.Pos.Y += bp.Dims.Y * float64(i) + space.Tl.Y
+			building.Pos.Y += bp.Dims.Y*float64(i) + space.Tl.Y
 			building.Pos.X += space.Tl.X
 			out[bCount] = building
 
@@ -186,11 +186,11 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 		}
 	}
 
-
 	i := 0
 	for key := range resources {
-		fmt.Printf("building path for resource %s from %v to %v\n", key, resources[key], Position{space.Tl.X + float64(i), space.Tl.Y-1})
-		path := b.Mapper.FindBeltPath(resources[key], Position{space.Tl.X + float64(i), space.Tl.Y-2})
+		fmt.Printf("building path for resource %s from %v to %v\n", key, resources[key], Position{space.Tl.X + float64(i), space.Tl.Y - 1})
+		path := b.Mapper.FindBeltPath(resources[key], Position{space.Tl.X + float64(i), space.Tl.Y - 2})
+		b.Mapper.AllocBelt(path)
 		pathBp := b.Mapper.TileArrayToBP(path)
 		b.build(pathBp)
 		b.waitForTaskDone()
@@ -223,11 +223,11 @@ func (b *Bot) newMiners(patch OrePatch) (Position, float64) {
 	wcount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hcount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
 
-	space := Box{Position{patch.Dims.Tl.X-1, patch.Dims.Tl.Y-1}, Position{patch.Dims.Br.X, patch.Dims.Br.Y + 1}}
+	space := Box{Position{patch.Dims.Tl.X - 1, patch.Dims.Tl.Y - 1}, Position{patch.Dims.Br.X, patch.Dims.Br.Y + 1}}
 	b.clearAll(space)
 	b.waitForTaskDone()
 
-	out := make([]Building, wcount*hcount*len(minerBp.Buildings) + hcount + wcount + int(math.Abs(patch.Dims.Tl.X - patch.Dims.Br.X))) // count of bps * buildings in bp + additional poles
+	out := make([]Building, wcount*hcount*len(minerBp.Buildings)+hcount+wcount+int(math.Abs(patch.Dims.Tl.X-patch.Dims.Br.X))) // count of bps * buildings in bp + additional poles
 	bCount := 0
 
 	for h := 0; h < hcount; h++ { // add poles on the left
@@ -273,7 +273,7 @@ func (b *Bot) newMiners(patch OrePatch) (Position, float64) {
 		}
 	}
 
-	for w:=patch.Dims.Tl.X; w < patch.Dims.Br.X; w++ {
+	for w := patch.Dims.Tl.X; w < patch.Dims.Br.X; w++ {
 		out[bCount] = Building{Name: b.resolveBuildingName("belt"), Rotation: dirEast, Pos: Position{w, patch.Dims.Br.Y}}
 		bCount++
 	}
@@ -299,7 +299,7 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 
 	space := Box{Position{0, 0},
 		Position{
-			smeltingBp.Dims.X * float64(furnaceCount) + smeltingHeaderBp.Dims.X,
+			smeltingBp.Dims.X*float64(furnaceCount) + smeltingHeaderBp.Dims.X,
 			smeltingBp.Dims.Y}}
 
 	b.Mapper.findSpace(&space)
@@ -309,7 +309,7 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 	b.clearAll(space)
 	b.waitForTaskDone()
 
-	out := make([]Building, len(smeltingHeaderBp.Buildings) + furnaceCount * len(smeltingBp.Buildings) + len(smeltingFooterBp.Buildings))
+	out := make([]Building, len(smeltingHeaderBp.Buildings)+furnaceCount*len(smeltingBp.Buildings)+len(smeltingFooterBp.Buildings))
 
 	bCount := 0
 	for _, building := range smeltingHeaderBp.Buildings {
@@ -331,7 +331,7 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 	}
 
 	for _, building := range smeltingFooterBp.Buildings {
-		building.Pos.X += space.Tl.X + smeltingHeaderBp.Dims.X + smeltingBp.Dims.X * float64(furnaceCount)
+		building.Pos.X += space.Tl.X + smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount)
 		building.Pos.Y += space.Tl.Y
 		out[bCount] = building
 		out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
@@ -342,10 +342,10 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 	b.waitForTaskDone()
 
 	return Box{Tl: Position{
-		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X * float64(furnaceCount),
+		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount),
 		6,
 	}, Br: Position{
-		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X * float64(furnaceCount) + smeltingFooterBp.Dims.X - 1,
+		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount) + smeltingFooterBp.Dims.X - 1,
 		6,
 	}}, nil
 }

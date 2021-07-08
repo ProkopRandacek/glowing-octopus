@@ -114,7 +114,7 @@ func (m *Mapper) FindBeltPath(from, to Position) []Tile {
 	return tilePath
 }
 
-func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
+func (m *Mapper) BeltToBP(tiles []Tile) []Building {
 	bp := []Building{}
 	wasLastUg := false
 	for _, t := range tiles {
@@ -136,4 +136,10 @@ func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 		})
 	}
 	return bp
+}
+
+func (m *Mapper) AllocBelt(tiles []Tile) {
+	for _, t := range tiles {
+		m.forceAlloc(box(t.Pos.X, t.Pos.Y, t.Pos.X+1, t.Pos.Y+1))
+	}
 }

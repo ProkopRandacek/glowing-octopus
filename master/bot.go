@@ -25,13 +25,13 @@ type State struct { // Lua bot internal representation
 type Task func(*Bot) error
 
 type Bot struct {
-	conn           *rcon.RCON
-	Mapper         Mapper
-	TaskList       *list.List
-	InserterLevel  string
-	AssemblerLevel int
-	BeltLevel      string
-	FurnaceLevel   string
+	conn            *rcon.RCON
+	Mapper          Mapper
+	TaskList        *list.List
+	InserterLevel   string
+	AssemblerLevel  int
+	BeltLevel       string
+	FurnaceLevel    string
 	SharedResources map[string][]SharedDepLocation
 }
 

@@ -96,7 +96,7 @@ func (b *Bot) allocWater(box Box) error {
 	fmt.Println(water)
 
 	for _, pos := range water {
-		b.Mapper.forceAlloc(Box{pos, Position{pos.X+32,pos.Y+32}})
+		b.Mapper.forceAlloc(Box{pos, Position{pos.X + 32, pos.Y + 32}})
 	}
 	return nil
 }
