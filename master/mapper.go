@@ -182,8 +182,14 @@ func (m *Mapper) alloc(dims Box) int {
 		return -1
 	}
 
+	return m.forceAlloc(dims)
+}
+
+func (m *Mapper) forceAlloc(dims Box) int {
 	m.Areas = append(m.Areas, Area{dims, m.AllocIdCounter})
 	m.AllocIdCounter++
+
+	bot.drawBox(dims, Color{1, 0, 0})
 
 	return m.AllocIdCounter - 1
 }

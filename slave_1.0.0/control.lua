@@ -1,5 +1,7 @@
 require("util")
 
+local water_chunk_size = 32
+
 local tick = 0
 local inited = false
 
@@ -124,8 +126,17 @@ end
 
 function write_water(area)
 	output = {}
-	for i, t in pairs(game.surfaces[1].find_tiles_filtered{area = area, name = {"water", "deepwater"}}) do
-		output[i] = { t.position.x, t.position.y }
+	tl_chunk = {math.floor(area[1][1] / water_chunk_size) * water_chunk_size, math.floor(area[1][2] / water_chunk_size) * water_chunk_size}
+	br_chunk = {math.ceil(area[2][1] / water_chunk_size) * water_chunk_size, math.ceil(area[2][2] / water_chunk_size) * water_chunk_size}
+	game.print(game.table_to_json(tl_chunk))
+	game.print(game.table_to_json(br_chunk))
+
+	for x = tl_chunk[1],br_chunk[1],water_chunk_size do
+		for y = tl_chunk[2],br_chunk[2],water_chunk_size do
+			if #surface.find_tiles_filtered{area={{x,y},{x+water_chunk_size,y+water_chunk_size}},name={"water", "deepwater"},limit=1} >= 1 then
+				table.insert(output, {x = x, y = y})
+			end
+		end
 	end
 	game.write_file("water.json", game.table_to_json(output))
 	game.print("water export done")
@@ -342,7 +353,7 @@ end
 
 commands.add_command("writeresrc", nil, function(command) write_resrc(game.json_to_table(command.parameter)) end)
 commands.add_command("writewater", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
-commands.add_command("writetrees", nil, function(command) write_water(game.json_to_table(command.parameter)) end)
+commands.add_command("writetrees", nil, function(command) write_trees(game.json_to_table(command.parameter)) end)
 commands.add_command("writerocks", nil, function(command) write_rocks(                                     ) end)
 
 commands.add_command("walkto", nil, function(command)

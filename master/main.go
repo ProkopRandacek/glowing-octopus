@@ -22,6 +22,8 @@ func main() {
 		return
 	}
 
+	bot.allocWater(box(-224, -224, 224, 224))
+
 	resrcs, err := bot.getResources(Box{Position{-700, -700}, Position{700, 700}}) // get the start area ores
 	if err != nil {
 		fmt.Println("could not get the resources")

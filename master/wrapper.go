@@ -27,10 +27,7 @@ func (b *Bot) waitForTaskDone() { // Waits until task is done.
 func (b *Bot) getResources(box Box) (map[string][]Position, error) {
 	filename := scriptFolder + "resrc.json"
 	os.Remove(filename)
-	_, err := b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
-	if err != nil {
-		return nil, err
-	}
+	b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 
 	for { // wait until the file is written
 		_, err := os.Stat(filename)
@@ -62,6 +59,46 @@ func (b *Bot) getResources(box Box) (map[string][]Position, error) {
 	b.Mapper.LoadedBoxes = append(b.Mapper.LoadedBoxes, box)
 
 	return resrcs, nil
+}
+
+func (b *Bot) allocWater(box Box) error {
+	filename := scriptFolder + "water.json"
+	os.Remove(filename)
+	b.conn.Execute(fmt.Sprintf("/writewater [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+
+	for { // wait until the file is written
+		_, err := os.Stat(filename)
+		if err == nil {
+			break
+		}
+
+		log(fmt.Sprintf("Waiting for the %s to be generated", filename))
+		time.Sleep(time.Second)
+	}
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	dat, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	var water []Position
+	err = json.Unmarshal(dat, &water)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(water)
+
+	for _, pos := range water {
+		b.Mapper.forceAlloc(Box{pos, Position{pos.X+32,pos.Y+32}})
+	}
+	return nil
 }
 
 func (b *Bot) walkTo(p Position) {

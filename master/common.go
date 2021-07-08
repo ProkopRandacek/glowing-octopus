@@ -55,3 +55,7 @@ func (b *Box) Round() {
 	b.Br.X = math.Round(b.Br.X)
 	b.Br.Y = math.Round(b.Br.Y)
 }
+
+func box(a, b, c, d float64) Box { // a shortcut
+	return Box{Position{a, b}, Position{c, d}}
+}
