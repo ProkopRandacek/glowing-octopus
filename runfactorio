@@ -3,7 +3,7 @@ if [ ! -f ./fac ]; then # download factorio if it isnt already
 	./getfactorio
 fi
 if [ ! -f ./map.zip ]; then # generate the map if it isnt already
-	./fac --create ./map.zip
+	./fac --create ./map.zip --map-settings ./map-settings.json --map-gen-settings ./map-gen-settings.json 
 fi
 # run the server
-./fac --start-server ./map.zip --rcon-bind "localhost:7000" --rcon-password "123456"
+./fac --start-server ./map.zip --rcon-bind "localhost:7000" --rcon-password "123456" --server-settings ./server-settings.json
