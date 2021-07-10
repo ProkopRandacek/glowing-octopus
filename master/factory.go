@@ -150,8 +150,14 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 
 	resources := map[string]Position{}
 
-	fmt.Println("resolvind dependencies")
-	for _, d := range item.Deps {
+	asmCount := int(math.Ceil(float64(ps * item.CraftTime))) // count of assemblers needed
+	space := Box{Tl: Position{0, 0}, Br: Position{bp.Dims.X, bp.Dims.Y * float64(asmCount)}}
+	b.Mapper.findSpace(&space)
+	if b.Mapper.alloc(space) < 0 {
+		return Position{}, errors.New("Could not find space to allocate")
+	}
+
+	for i, d := range item.Deps {
 		if d.Name != "iron-plate" && d.Name != "copper-plate" {
 			fmt.Printf("%s needs to be built.\n", d.Name)
 			var err error
@@ -159,13 +165,18 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 			if err != nil {
 				return Position{}, err
 			}
+
 		} else {
 			fmt.Printf("%s is shared. I will look for it.\n", d.Name)
 			index, err := b.findSharedResource(d.Name, ps*float64(d.Count))
-			resources[d.Name] = b.SharedResources[d.Name][index].Pos
-
 			if err != nil {
 				return Position{}, err
+			}
+
+			resources[d.Name] = b.SharedResources[d.Name][index].Pos
+			b.SharedResources[d.Name][index].Pos = Position{space.Tl.X + float64(i), space.Br.Y + 1}
+			if i == 1 {
+				// TODO add splitter
 			}
 		}
 
@@ -176,13 +187,6 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	}
 
 	fmt.Println("all dependencies resolved")
-	asmCount := int(math.Ceil(float64(ps * item.CraftTime))) // count of assemblers needed
-
-	space := Box{Tl: Position{0, 0}, Br: Position{bp.Dims.X, bp.Dims.Y * float64(asmCount)}}
-	b.Mapper.findSpace(&space)
-	if b.Mapper.alloc(space) < 0 {
-		return Position{}, errors.New("Could not find space to allocate")
-	}
 	fmt.Println("allocated space for factory")
 	b.clearAll(space)
 	b.waitForTaskDone()
