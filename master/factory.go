@@ -14,13 +14,13 @@ var recipes map[string]Item
 
 type SharedDepLocation struct {
 	Name string
-	Pos Position
+	Pos  Position
 	Left float64
 }
 
 type RecipeDep struct {
-	Name        string `json:"name"`
-	Count       int    `json:"count"`
+	Name  string `json:"name"`
+	Count int    `json:"count"`
 }
 
 type Item struct {
@@ -82,7 +82,7 @@ func (b *Bot) findSharedResource(item string, amount float64) (int, error) {
 
 		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, pos)
 		b.SharedResources[item] = append(b.SharedResources[item], SharedDepLocation{Name: item, Pos: pos, Left: output}) // add the pos to shared resources
-		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:i], b.Mapper.OrePatches[oreName][i+1:]...) // remove the patch from mapper, as it no longer can be used
+		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:i], b.Mapper.OrePatches[oreName][i+1:]...)   // remove the patch from mapper, as it no longer can be used
 		return b.findSharedResource(item, amount)
 	}
 

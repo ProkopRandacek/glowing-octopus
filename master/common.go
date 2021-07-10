@@ -61,12 +61,12 @@ func box(a, b, c, d float64) Box { // a shortcut
 }
 
 func Find(slice []string, val string) bool {
-    for _, item := range slice {
-        if item == val {
-            return true
-        }
-    }
-    return false
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
 }
 
 func getRawItemsFromItem(num float64, item string) map[string]float64 {
@@ -79,7 +79,7 @@ func getRawItemsFromItem(num float64, item string) map[string]float64 {
 	}
 
 	for _, d := range val.Deps {
-		n := getRawItemsFromItem(float64(d.Count) * num / float64(val.CraftNum), d.Name)
+		n := getRawItemsFromItem(float64(d.Count)*num/float64(val.CraftNum), d.Name)
 		for n, c := range n {
 			out[n] += c
 		}
@@ -97,7 +97,7 @@ func calcBPItems([]Building) map[string]int {
 	items := map[string]float64{}
 
 	for building, count := range buldingsCount {
-		for n, c := range getRawItemsFromItem(float64(count), building,) {
+		for n, c := range getRawItemsFromItem(float64(count), building) {
 			items[n] += c
 		}
 	}

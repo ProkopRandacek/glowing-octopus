@@ -56,21 +56,21 @@ func newBot(address, password string) error {
 	bot.Mapper.OrePatches = make(map[string][]OrePatch, 6)
 
 	bot.Mapper.Resrcs = map[string][]Position{
-		"iron-ore":    []Position{},
-		"copper-ore":  []Position{},
-		"coal":        []Position{},
-		"stone":       []Position{},
-		"uranium-ore": []Position{},
-		"crude-oil":   []Position{},
+		"iron-ore":    {},
+		"copper-ore":  {},
+		"coal":        {},
+		"stone":       {},
+		"uranium-ore": {},
+		"crude-oil":   {},
 	}
 
 	bot.Mapper.OrePatches = map[string][]OrePatch{
-		"iron-ore":    []OrePatch{},
-		"copper-ore":  []OrePatch{},
-		"coal":        []OrePatch{},
-		"stone":       []OrePatch{},
-		"uranium-ore": []OrePatch{},
-		"crude-oil":   []OrePatch{},
+		"iron-ore":    {},
+		"copper-ore":  {},
+		"coal":        {},
+		"stone":       {},
+		"uranium-ore": {},
+		"crude-oil":   {},
 	}
 
 	bot.TaskList = list.New()
