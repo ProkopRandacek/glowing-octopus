@@ -2,43 +2,42 @@ package main
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/lmorg/readline"
+	"strings"
 )
 
 var commands = []string{
-	"writeresrc",
-	"walkto",
+	"build",
+	"cleararea",
+	"craft",
 	"drawbox",
 	"drawpoint",
-	"craft",
 	"mine",
 	"mineresource",
-	"cleararea",
 	"place",
 	"put",
 	"take",
-	"build",
+	"walkto",
+	"writeresrc",
 }
 
 var help = map[string]string{
-	"writeresrc":   "[ [min_x, min_y], [max_x, max_y] ]",
-	"walkto":       "[ x, y ]",
+	"build":        "{ TODO }",
+	"cleararea":    "{ \"area\": [ [min_x, min_y], [max_x, max_y] ], \"t\": \"all\"/\"nature\"}",
+	"craft":        "{ \"recipe\", \"count\"}",
 	"drawbox":      "{ \"color\": [ r, g, b ], \"x1\", \"y1\", \"x2\", \"y2\"}",
 	"drawpoint":    "{ \"color\": [ r, g, b ], \"x\", \"y\"}",
-	"craft":        "{ \"recipe\", \"count\"}",
 	"mine":         "[ x, y ]",
 	"mineresource": "{ \"pos\": [ x, y ], \"amount\", \"name\" }",
-	"cleararea":    "{ \"area\": [ [min_x, min_y], [max_x, max_y] ], \"t\": \"all\"/\"nature\"}",
 	"place":        "{ \"pos\": [ x, y ], \"item\" }",
 	"put":          "{ \"pos\": [ x, y ], \"item\", \"amount\", \"slot\" }",
 	"take":         "{ \"pos\": [ x, y ], \"item\", \"amount\", \"slot\" }",
-	"build":        "{ TODO }",
+	"walkto":       "[ x, y ]",
+	"writeresrc":   "[ [min_x, min_y], [max_x, max_y] ]",
 }
 
 func tabCompleter(text []rune, pos int, dtc readline.DelayedTabContext) (string, []string, map[string]string, readline.TabDisplayType) {
-	suggestions := []string{}
+	var suggestions []string
 
 	for _, c := range commands {
 		if strings.HasPrefix(c, string(text)) {
@@ -54,20 +53,20 @@ func syntaxCompleter(text []rune, pos int) ([]rune, int) { // TODO
 		return text, pos
 	}
 
-	to_add := 'n'
+	toAdd := 'n'
 	switch text[pos] {
 	case '"', '\'':
-		to_add = text[pos]
+		toAdd = text[pos]
 	case '(':
-		to_add = ')'
+		toAdd = ')'
 	case '[':
-		to_add = ']'
+		toAdd = ']'
 	case '{':
-		to_add = '}'
+		toAdd = '}'
 	}
 
-	if to_add != 'n' {
-		text = append(text[:pos], append([]rune{to_add}, text[pos+1:]...)...)
+	if toAdd != 'n' {
+		text = append(text[:pos], append([]rune{toAdd}, text[pos+1:]...)...)
 	}
 
 	return text, pos
@@ -86,7 +85,7 @@ func hinter(text []rune, pos int) []rune {
 	return []rune(help[command])
 }
 
-func (b *Bot) runShell() {
+func (b *bot) runShell() error {
 	rl := readline.NewInstance()
 	rl.TabCompleter = tabCompleter
 	//rl.SyntaxCompleter = syntaxCompleter
@@ -101,8 +100,12 @@ func (b *Bot) runShell() {
 			break
 		}
 
-		b.conn.Execute("/" + text)
+		_, err = b.conn.Execute("/" + text)
+		if err != nil {
+			return err
+		}
 		b.waitForTaskDone()
 		fmt.Println("done")
 	}
+	return nil
 }

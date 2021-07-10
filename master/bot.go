@@ -10,10 +10,10 @@ import (
 	"os"
 )
 
-var bot = Bot{}
+var fbot = bot{}
 
-type State struct { // Lua bot internal representation
-	Pos            Position `json:"position"`
+type state struct { // Lua fbot internal representation
+	Pos            position `json:"position"`
 	Walking        bool     `json:"walking_state"`
 	Mining         bool     `json:"mining_state"`
 	ResourceMining bool     `json:"mining_resource_state"`
@@ -22,17 +22,17 @@ type State struct { // Lua bot internal representation
 	Building       bool     `json:"building_state"`
 }
 
-type Task func(*Bot) error
+type task func(*bot) error
 
-type Bot struct {
+type bot struct {
 	conn            *rcon.RCON
-	Mapper          Mapper
+	Mapper          mapper
 	TaskList        *list.List
 	InserterLevel   string
 	AssemblerLevel  int
 	BeltLevel       string
 	FurnaceLevel    string
-	SharedResources map[string][]SharedDepLocation
+	SharedResources map[string][]sharedDepLocation
 }
 
 func newBot(address, password string) error {
@@ -41,21 +41,21 @@ func newBot(address, password string) error {
 		return err
 	}
 
-	bot.conn, err = rcon.Dial(address)
+	fbot.conn, err = rcon.Dial(address)
 	if err != nil {
 		return err
 	}
 
-	err = bot.conn.Authenticate(password)
+	err = fbot.conn.Authenticate(password)
 	if err != nil {
 		return err
 	}
 
-	bot.Mapper = Mapper{}
-	bot.Mapper.Resrcs = make(map[string][]Position, 6)
-	bot.Mapper.OrePatches = make(map[string][]OrePatch, 6)
+	fbot.Mapper = mapper{}
+	fbot.Mapper.Resources = make(map[string][]position, 6)
+	fbot.Mapper.OrePatches = make(map[string][]orePatch, 6)
 
-	bot.Mapper.Resrcs = map[string][]Position{
+	fbot.Mapper.Resources = map[string][]position{
 		"iron-ore":    {},
 		"copper-ore":  {},
 		"coal":        {},
@@ -64,7 +64,7 @@ func newBot(address, password string) error {
 		"crude-oil":   {},
 	}
 
-	bot.Mapper.OrePatches = map[string][]OrePatch{
+	fbot.Mapper.OrePatches = map[string][]orePatch{
 		"iron-ore":    {},
 		"copper-ore":  {},
 		"coal":        {},
@@ -73,52 +73,63 @@ func newBot(address, password string) error {
 		"crude-oil":   {},
 	}
 
-	bot.TaskList = list.New()
+	fbot.TaskList = list.New()
 
-	bot.InserterLevel = "fast"
-	bot.AssemblerLevel = 1
-	bot.BeltLevel = ""
-	bot.FurnaceLevel = "stone"
+	fbot.InserterLevel = "fast"
+	fbot.AssemblerLevel = 1
+	fbot.BeltLevel = ""
+	fbot.FurnaceLevel = "stone"
 
-	bot.SharedResources = map[string][]SharedDepLocation{}
+	fbot.SharedResources = map[string][]sharedDepLocation{}
 
 	return nil
 }
 
-func (b *Bot) state() State {
+func (b *bot) safeExecute(command string) {
+	_, err := b.conn.Execute(command)
+	if err != nil {
+		panic("error while calling factorio command: " + err.Error())
+	}
+}
+
+func (b *bot) state() (state, error) {
 	f, err := os.Open("./master/script-output/state.json")
 	if f == nil {
 		fmt.Println("Error opening state file: ", err)
-		return State{}
+		return state{}, err
 	}
-	defer f.Close()
+	defer f.Close() // TODO: handle error from f.Close()
 
 	dat, err := io.ReadAll(f)
+
 	if err != nil {
 		fmt.Println("Error reading state file: ", err)
-		return State{}
+		return state{}, err
 	}
 
-	state := State{}
-	json.Unmarshal(dat, &state)
+	s := state{}
+	err = json.Unmarshal(dat, &s)
+	if err != nil {
+		return state{}, nil
+	}
 
-	return state
+	return s, nil
 }
 
-func (b *Bot) addTask(t Task) {
+func (b *bot) addTask(t task) {
 	b.TaskList.PushBack(t)
 }
 
-func (b *Bot) pushTask(t Task) {
+func (b *bot) pushTask(t task) {
 	b.TaskList.PushFront(t)
 }
 
-func (b *Bot) doTask() error {
+func (b *bot) doTask() error {
 	if b.TaskList.Len() == 0 {
 		return errors.New("no tasks left")
 	}
 
-	err := b.TaskList.Front().Value.(Task)(b)
+	err := b.TaskList.Front().Value.(task)(b)
 
 	b.TaskList.Remove(b.TaskList.Front())
 

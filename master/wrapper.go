@@ -12,11 +12,14 @@ const (
 	scriptFolder = "./master/script-output/"
 )
 
-func (b *Bot) waitForTaskDone() { // Waits until task is done.
+func (b *bot) waitForTaskDone() { // Waits until task is done.
 	for {
 		log("Waiting for task done")
 		time.Sleep(2 * time.Second)
-		s := b.state()
+		s, err := b.state()
+		if err != nil {
+			panic("error while waiting for task: " + err.Error())
+		}
 		if !(s.Walking || s.Mining || s.ResourceMining || s.Placing || s.Clearing || s.Building) {
 			break
 		}
@@ -24,10 +27,16 @@ func (b *Bot) waitForTaskDone() { // Waits until task is done.
 	fmt.Println()
 }
 
-func (b *Bot) getResources(box Box) (map[string][]Position, error) {
+func (b *bot) getResources(box box) (map[string][]position, error) {
 	filename := scriptFolder + "resrc.json"
-	os.Remove(filename)
-	b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+	err := os.Remove(filename)
+	if err != nil {
+		return nil, err
+	}
+	_, err = b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+	if err != nil {
+		return nil, err
+	}
 
 	for { // wait until the file is written
 		_, err := os.Stat(filename)
@@ -43,28 +52,34 @@ func (b *Bot) getResources(box Box) (map[string][]Position, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer f.Close() // TODO: handle error from f.Close()
 
 	dat, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
 
-	var resrcs map[string][]Position
-	err = json.Unmarshal(dat, &resrcs)
+	var resources map[string][]position
+	err = json.Unmarshal(dat, &resources)
 	if err != nil {
 		return nil, err
 	}
 
 	b.Mapper.LoadedBoxes = append(b.Mapper.LoadedBoxes, box)
 
-	return resrcs, nil
+	return resources, nil
 }
 
-func (b *Bot) allocWater(box Box) error {
+func (b *bot) allocWater(box box) error {
 	filename := scriptFolder + "water.json"
-	os.Remove(filename)
-	b.conn.Execute(fmt.Sprintf("/writewater [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+	err := os.Remove(filename)
+	if err != nil {
+		return err
+	}
+	_, err = b.conn.Execute(fmt.Sprintf("/writewater [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+	if err != nil {
+		return err
+	}
 
 	for { // wait until the file is written
 		_, err := os.Stat(filename)
@@ -80,14 +95,14 @@ func (b *Bot) allocWater(box Box) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer f.Close() // TODO: Handle error from f.Close()
 
 	dat, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
 
-	var water []Position
+	var water []position
 	err = json.Unmarshal(dat, &water)
 	if err != nil {
 		return err
@@ -96,68 +111,68 @@ func (b *Bot) allocWater(box Box) error {
 	fmt.Println(water)
 
 	for _, pos := range water {
-		b.Mapper.forceAlloc(Box{pos, Position{pos.X + 32, pos.Y + 32}})
+		b.Mapper.forceAlloc(makeBox(pos.X, pos.Y, pos.X+32, pos.Y+32))
 	}
 	return nil
 }
 
-func (b *Bot) walkTo(p Position) {
-	b.conn.Execute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
+func (b *bot) walkTo(p position) {
+	b.safeExecute(fmt.Sprintf(`/walkto [%.2f,%.2f]`, p.X, p.Y))
 }
 
-func (b *Bot) drawBox(box Box, color Color) {
-	b.conn.Execute(fmt.Sprintf(`/drawbox {"color":[%2.f, %2.f, %2.f, 0.2],"x1":%2.f,"y1":%2.f,"x2":%2.f,"y2":%2.f}`, color.R, color.G, color.B, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+func (b *bot) drawBox(box box, color color) {
+	b.safeExecute(fmt.Sprintf(`/drawbox {"color":[%2.f, %2.f, %2.f, 0.2],"x1":%2.f,"y1":%2.f,"x2":%2.f,"y2":%2.f}`, color.R, color.G, color.B, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
-func (b *Bot) drawPoint(pos Position, color Color) {
-	b.conn.Execute(fmt.Sprintf(`/drawpoint {"color":[%2.f, %2.f, %2.f, 0.2],"x":%2.f,"y":%2.f}`, color.R, color.G, color.B, pos.X, pos.Y))
+func (b *bot) drawPoint(pos position, color color) {
+	b.safeExecute(fmt.Sprintf(`/drawpoint {"color":[%2.f, %2.f, %2.f, 0.2],"x":%2.f,"y":%2.f}`, color.R, color.G, color.B, pos.X, pos.Y))
 }
 
-func (b *Bot) craft(r string, c int) {
-	b.conn.Execute(fmt.Sprintf(`/craft {"recipe":"%s","count":%d}`, r, c))
+func (b *bot) craft(r string, c int) {
+	b.safeExecute(fmt.Sprintf(`/craft {"recipe":"%s","count":%d}`, r, c))
 }
 
-func (b *Bot) mine(p Position) {
-	b.conn.Execute(fmt.Sprintf(`/mine [%.2f,%.2f]`, p.X, p.Y))
+func (b *bot) mine(p position) {
+	b.safeExecute(fmt.Sprintf(`/mine [%.2f,%.2f]`, p.X, p.Y))
 }
 
-func (b *Bot) mineResource(p Position, amount int, name string) {
-	b.conn.Execute(fmt.Sprintf(`/mineresource {"pos":[%.2f,%.2f],"amount":%d,"name":"%s"}`, p.X, p.Y, amount, name))
+func (b *bot) mineResource(p position, amount int, name string) {
+	b.safeExecute(fmt.Sprintf(`/mineresource {"pos":[%.2f,%.2f],"amount":%d,"name":"%s"}`, p.X, p.Y, amount, name))
 }
 
-func (b *Bot) clearNature(box Box) {
-	b.conn.Execute(fmt.Sprintf(`/cleararea {"area":[[%2.f, %2.f],[%2.f, %2.f]],"t":"nature"}`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+func (b *bot) clearNature(box box) {
+	b.safeExecute(fmt.Sprintf(`/cleararea {"area":[[%2.f, %2.f],[%2.f, %2.f]],"t":"nature"}`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
-func (b *Bot) clearAll(box Box) {
-	b.conn.Execute(fmt.Sprintf(`/cleararea {"area":[[%2.f, %2.f],[%2.f, %2.f]],"t":"all"}`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+func (b *bot) clearAll(box box) {
+	b.safeExecute(fmt.Sprintf(`/cleararea {"area":[[%2.f, %2.f],[%2.f, %2.f]],"t":"all"}`, box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 }
 
-func (b *Bot) place(p Position, item string) {
-	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s"}`, p.X, p.Y, item))
+func (b *bot) place(p position, item string) {
+	b.safeExecute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s"}`, p.X, p.Y, item))
 }
 
-func (b *Bot) placeRecipe(p Position, item string, recipe string) {
-	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","recipe":"%s"}`, p.X, p.Y, item, recipe))
+func (b *bot) placeRecipe(p position, item string, recipe string) {
+	b.safeExecute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","recipe":"%s"}`, p.X, p.Y, item, recipe))
 }
 
-func (b *Bot) placeDir(p Position, item string, dir int) {
-	b.conn.Execute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","dir":%d}`, p.X, p.Y, item, dir))
+func (b *bot) placeDir(p position, item string, dir int) {
+	b.safeExecute(fmt.Sprintf(`/place {"pos":[%2.f,%2.f],"item":"%s","dir":%d}`, p.X, p.Y, item, dir))
 }
 
 // https://lua-api.factorio.com/latest/defines.html#defines.inventory
 // fuel = 1
 // furnace_source = 2
 // furnace result = 3
-func (b *Bot) put(p Position, item string, amount int, slot int) {
-	b.conn.Execute(fmt.Sprintf(`/put {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
+func (b *bot) put(p position, item string, amount int, slot int) {
+	b.safeExecute(fmt.Sprintf(`/put {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
 }
 
-func (b *Bot) take(p Position, item string, amount int, slot int) {
-	b.conn.Execute(fmt.Sprintf(`/take {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
+func (b *bot) take(p position, item string, amount int, slot int) {
+	b.safeExecute(fmt.Sprintf(`/take {"pos":[%2.f,%2.f],"item":"%s","amount":%d,"slot":%d}`, p.X, p.Y, item, amount, slot))
 }
 
-func (b *Bot) build(bs []Building) {
+func (b *bot) build(bs []building) {
 	s, _ := json.Marshal(bs)
-	b.conn.Execute(fmt.Sprintf(`/build %s`, string(s)))
+	b.safeExecute(fmt.Sprintf(`/build %s`, string(s)))
 }

@@ -1,67 +1,35 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"math"
 )
 
-type OrePatch struct {
-	Dims   Box
+type orePatch struct {
+	Dims   box
 	Unsafe bool
 }
 
-type Area struct {
-	Dims Box
+type area struct {
+	Dims box
 	Id   int
 }
 
-type Mapper struct {
-	Areas          []Area // marks what areas area allocated
+type mapper struct {
+	Areas          []area // marks what areas area allocated
 	AllocIdCounter int    // for area id generation
-	MallMap        map[string]Position
-	AllocMap       []Box
-	WaterTiles     []Position            // the exact tiles that are in water
-	WaterBox       Box                   // water boxes for fast intersection check
-	Resrcs         map[string][]Position // all the individual ore tiles
-	OrePatches     map[string][]OrePatch // ore tiles grouped together into patches
-	LoadedBoxes    []Box                 // all the area boxes that we requested from the game
+	MallMap        map[string]position
+	AllocMap       []box
+	WaterTiles     []position            // the exact tiles that are in water
+	WaterBox       box                   // water boxes for fast intersection check
+	Resources      map[string][]position // all the individual ore tiles
+	OrePatches     map[string][]orePatch // ore tiles grouped together into patches
+	LoadedBoxes    []box                 // all the area boxes that we requested from the game
 }
 
-// Ore types
-const (
-	iron = iota
-	copper
-	stone
-	coal
-	uran
-)
-
-func isBorderSharedWithBox(box Box, boxes []Box, ignore int) bool {
-	box.Round()
-
+func (o *orePatch) isUnsafe(boxes []box) {
 	for i, b := range boxes {
-		if i == ignore {
-			continue
-		}
-
-		b.Round()
-
-		if box.Tl.X == b.Tl.X ||
-			box.Tl.Y == b.Tl.Y ||
-			box.Br.X == b.Br.Y ||
-			box.Br.Y == b.Br.Y ||
-			box.Tl.X == b.Br.X ||
-			box.Tl.Y == b.Br.Y {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (o *OrePatch) isUnsafe(boxes []Box) {
-	for i, b := range boxes {
-		if isBorderSharedWithBox(o.Dims, []Box{b}, -1) && !isBorderSharedWithBox(b, boxes, i) {
+		if isBorderSharedWithBox(o.Dims, []box{b}, -1) && !isBorderSharedWithBox(b, boxes, i) {
 			o.Unsafe = true
 			return
 		}
@@ -70,52 +38,13 @@ func (o *OrePatch) isUnsafe(boxes []Box) {
 	o.Unsafe = false
 }
 
-func findComponents(tilesOrig []Position) (boxes []OrePatch) { // divide graph into components but only store component bounds
-	pos := Position{}
-
-	tiles := make([]Position, len(tilesOrig))
-
-	for i := range tilesOrig {
-		tiles[i] = tilesOrig[i]
-	}
-
-	for len(tiles) > 0 { // iterate over all positions
-		pos, tiles = tiles[0], tiles[1:]                                               // pop firts value
-		seen := []Position{pos}                                                        // make this a set?
-		q := []Position{pos}                                                           // queue
-		maxx, maxy, minx, miny := math.Inf(-1), math.Inf(-1), math.Inf(1), math.Inf(1) // component bounds
-		for {
-			pos, q = q[0], q[1:] // pop firts value
-			for _, ox := range [3]float64{-1.0, 0.0, 1.0} {
-				for _, oy := range [3]float64{-1.0, 0.0, 1.0} { // for each direction from our position
-					move := Position{pos.X + ox, pos.Y + oy}            // move in that direction
-					if contains(tiles, move) && !contains(seen, move) { // if that position is a ore and not visited already
-						q = append(q, move)            // add it to queue
-						tiles = removeVal(tiles, move) // and remove it from ore list
-					}
-				}
-			}
-			seen = append(seen, pos)
-			maxx = math.Max(maxx, pos.X) // update box checks
-			maxy = math.Max(maxy, pos.Y)
-			minx = math.Min(minx, pos.X)
-			miny = math.Min(miny, pos.Y)
-			if len(q) == 0 {
-				break
-			}
-		}
-		boxes = append(boxes, OrePatch{Box{Position{minx, miny}, Position{maxx, maxy}}, true})
-	}
-	return
-}
-
-func (m *Mapper) calcPatches() {
+func (m *mapper) calcPatches() {
 	for t := range m.OrePatches { // for each resource type
-		m.OrePatches[t] = findComponents(m.Resrcs[t])
+		m.OrePatches[t] = findComponents(m.Resources[t])
 	}
 }
 
-func (m *Mapper) calcUnsafe() {
+func (m *mapper) calcUnsafe() {
 	for i := range m.OrePatches {
 		for j := range m.OrePatches[i] {
 			m.OrePatches[i][j].isUnsafe(m.LoadedBoxes)
@@ -123,31 +52,39 @@ func (m *Mapper) calcUnsafe() {
 	}
 }
 
-func (m *Mapper) allocatePatches() {
+func (m *mapper) allocatePatches() error {
 	for i := range m.OrePatches {
 		for j := range m.OrePatches[i] {
 			if m.OrePatches[i][j].Unsafe {
 				continue
 			}
 
-			m.alloc(m.OrePatches[i][j].Dims)
+			_, err := m.alloc(m.OrePatches[i][j].Dims)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-func (m *Mapper) readResources(r map[string][]Position) {
-	for t := range m.Resrcs { // for each resource type
+func (m *mapper) readResources(r map[string][]position) error {
+	for t := range m.Resources { // for each resource type
 		if len(r[t]) > 0 {
-			m.Resrcs[t] = append(m.Resrcs[t], r[t]...) // append the ores to it
+			m.Resources[t] = append(m.Resources[t], r[t]...) // append the ores to it
 			fmt.Println("read", t, "len:", len(r[t]))
 		}
 	}
 	m.calcPatches()
 	m.calcUnsafe()
-	m.allocatePatches()
+	err := m.allocatePatches()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (m *Mapper) isTileEmpty(p Position) bool {
+func (m *mapper) isTileEmpty(p position) bool {
 	for _, t := range m.Areas {
 		a := t.Dims
 
@@ -160,7 +97,7 @@ func (m *Mapper) isTileEmpty(p Position) bool {
 }
 
 // returns true, if dims is available
-func (m *Mapper) canAlloc(b Box) bool {
+func (m *mapper) canAlloc(b box) bool {
 	const gap = 7 // how much space to keep between allocated areas (for belts and stuff)
 	for _, t := range m.Areas {
 		a := t.Dims
@@ -177,25 +114,25 @@ func (m *Mapper) canAlloc(b Box) bool {
 }
 
 // allocates area and returns it's id. Returns -1 if area not available.
-func (m *Mapper) alloc(dims Box) int {
+func (m *mapper) alloc(dims box) (int, error) {
 	if !m.canAlloc(dims) {
-		return -1
+		return 0, errors.New("trying to allocate over another allocated position")
 	}
 
-	return m.forceAlloc(dims)
+	return m.forceAlloc(dims), nil
 }
 
-func (m *Mapper) forceAlloc(dims Box) int {
-	m.Areas = append(m.Areas, Area{dims, m.AllocIdCounter})
+func (m *mapper) forceAlloc(dims box) int {
+	m.Areas = append(m.Areas, area{dims, m.AllocIdCounter})
 	m.AllocIdCounter++
 
-	bot.drawBox(dims, Color{1, 0, 0})
+	fbot.drawBox(dims, color{1, 0, 0})
 
 	return m.AllocIdCounter - 1
 }
 
 // Moves the box to a near place where it fits.
-func (m *Mapper) findSpace(dims *Box) {
+func (m *mapper) findSpace(dims *box) {
 	side := 1
 
 	for {
@@ -233,7 +170,7 @@ func (m *Mapper) findSpace(dims *Box) {
 }
 
 // frees area by id. Returns true, if successful
-func (m *Mapper) free(id int) bool {
+func (m *mapper) free(id int) bool {
 	for i, v := range m.Areas {
 		if v.Id == id {
 			m.Areas = append(m.Areas[:i], m.Areas[i+1:]...)

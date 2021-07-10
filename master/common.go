@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"math"
+	"os"
 	"time"
 )
 
@@ -17,22 +20,20 @@ const (
 	dirNorthWest = 7
 )
 
-type Color struct {
+var recipes map[string]item
+
+type color struct {
 	R, G, B float32
 }
 
-type Position struct {
+type position struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 }
 
-type Box struct {
-	Tl Position // top left
-	Br Position // bottom right
-}
-
-type Measurable interface {
-	getDims() Box
+type box struct {
+	Tl position // top left
+	Br position // bottom right
 }
 
 var lastLog string
@@ -41,7 +42,7 @@ func log(msg string) {
 	bar := []string{"[.  ]", "[ . ]", "[  .]"}
 
 	if msg != lastLog {
-		fmt.Print("\n")
+		fmt.Println()
 	}
 
 	fps := 2.6
@@ -49,24 +50,24 @@ func log(msg string) {
 	lastLog = msg
 }
 
-func (b *Box) Round() {
-	b.Tl.X = math.Round(b.Tl.X)
-	b.Tl.Y = math.Round(b.Tl.Y)
-	b.Br.X = math.Round(b.Br.X)
-	b.Br.Y = math.Round(b.Br.Y)
-}
-
-func box(a, b, c, d float64) Box { // a shortcut
-	return Box{Position{a, b}, Position{c, d}}
-}
-
-func Find(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
+func loadRecipes() error {
+	f, err := os.Open("./master/recipes.json")
+	if err != nil {
+		return err
 	}
-	return false
+	defer f.Close() // TODO: Handle error from f.Close()
+
+	dat, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(dat, &recipes)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getRawItemsFromItem(num float64, item string) map[string]float64 {
@@ -74,7 +75,7 @@ func getRawItemsFromItem(num float64, item string) map[string]float64 {
 	out := map[string]float64{}
 	val, ok := recipes[item]
 
-	if !ok || Find(stopItems, item) {
+	if !ok || find(stopItems, item) {
 		return map[string]float64{item: num}
 	}
 
@@ -88,15 +89,15 @@ func getRawItemsFromItem(num float64, item string) map[string]float64 {
 	return out
 }
 
-func calcBPItems([]Building) map[string]int {
-	buldingsCount := map[string]int{}
-	for _, b := range []Building{} {
-		buldingsCount[b.Name]++
+func calcBPItems(bs []building) map[string]int {
+	buildingsCount := map[string]int{}
+	for _, b := range bs {
+		buildingsCount[b.Name]++
 	}
 
 	items := map[string]float64{}
 
-	for building, count := range buldingsCount {
+	for building, count := range buildingsCount {
 		for n, c := range getRawItemsFromItem(float64(count), building) {
 			items[n] += c
 		}
@@ -107,4 +108,90 @@ func calcBPItems([]Building) map[string]int {
 	}
 
 	return itemInts
+}
+
+func tileArrayToBP(tiles []tile) []building {
+	var bp []building
+	wasLastUg := false
+	for _, t := range tiles {
+		typ := "input"
+		name := "transport-belt"
+		if t.Ug {
+			name = "underground-belt"
+			wasLastUg = true
+		} else if wasLastUg {
+			name = "underground-belt"
+			wasLastUg = false
+			typ = "output"
+		}
+		bp = append(bp, building{
+			Name:     name,
+			Rotation: t.Dir,
+			Pos:      t.Pos,
+			Ugbt:     typ,
+		})
+	}
+	return bp
+}
+
+func findComponents(tilesOrig []position) (boxes []orePatch) { // divide graph into components but only store component bounds
+	pos := position{}
+
+	tiles := make([]position, len(tilesOrig))
+
+	for i := range tilesOrig {
+		tiles[i] = tilesOrig[i]
+	}
+
+	for len(tiles) > 0 { // iterate over all positions
+		pos, tiles = tiles[0], tiles[1:]                                               // pop first value
+		seen := []position{pos}                                                        // make this a set?
+		q := []position{pos}                                                           // queue
+		maxx, maxy, minx, miny := math.Inf(-1), math.Inf(-1), math.Inf(1), math.Inf(1) // component bounds
+		for {
+			pos, q = q[0], q[1:] // pop first value
+			for _, ox := range [3]float64{-1.0, 0.0, 1.0} {
+				for _, oy := range [3]float64{-1.0, 0.0, 1.0} { // for each direction from our position
+					move := position{pos.X + ox, pos.Y + oy}            // move in that direction
+					if contains(tiles, move) && !contains(seen, move) { // if that position is a ore and not visited already
+						q = append(q, move)            // add it to queue
+						tiles = removeVal(tiles, move) // and remove it from ore list
+					}
+				}
+			}
+			seen = append(seen, pos)
+			maxx = math.Max(maxx, pos.X) // update box checks
+			maxy = math.Max(maxy, pos.Y)
+			minx = math.Min(minx, pos.X)
+			miny = math.Min(miny, pos.Y)
+			if len(q) == 0 {
+				break
+			}
+		}
+		boxes = append(boxes, orePatch{box{position{minx, miny}, position{maxx, maxy}}, true})
+	}
+	return
+}
+
+func isBorderSharedWithBox(box box, boxes []box, ignore int) bool {
+	box.round()
+
+	for i, b := range boxes {
+		if i == ignore {
+			continue
+		}
+
+		b.round()
+
+		if box.Tl.X == b.Tl.X ||
+			box.Tl.Y == b.Tl.Y ||
+			box.Br.X == b.Br.Y ||
+			box.Br.Y == b.Br.Y ||
+			box.Tl.X == b.Br.X ||
+			box.Tl.Y == b.Br.Y {
+			return true
+		}
+	}
+
+	return false
 }

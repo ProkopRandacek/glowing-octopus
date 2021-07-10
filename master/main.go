@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	//time"
 )
 
 func main() {
@@ -15,24 +14,24 @@ func main() {
 		pass = os.Args[2]
 	}
 
-	err := newBot(addr, pass) // bot is global
+	err := newBot(addr, pass) // fbot is global
 	if err != nil {
-		fmt.Println("could not initialize bot")
+		fmt.Println("could not initialize fbot")
 		fmt.Println(err.Error())
 		return
 	}
 
-	bot.allocWater(box(-224, -224, 224, 224))
+	fbot.allocWater(makeBox(-224, -224, 224, 224))
 
-	resrcs, err := bot.getResources(Box{Position{-700, -700}, Position{700, 700}}) // get the start area ores
+	resources, err := fbot.getResources(box{position{-700, -700}, position{700, 700}}) // get the start area ores
 	if err != nil {
 		fmt.Println("could not get the resources")
 		fmt.Println(err.Error())
 		return
 	}
-	bot.Mapper.readResources(resrcs)
+	fbot.Mapper.readResources(resources)
 
-	fmt.Println(bot.newFactory("inserter", 4))
+	fmt.Println(fbot.newFactory("inserter", 4))
 
-	bot.runShell()
+	fbot.runShell()
 }
