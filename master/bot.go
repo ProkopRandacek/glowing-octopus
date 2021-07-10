@@ -5,21 +5,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gtaylor/factorio-rcon"
 	"io"
 	"os"
+
+	rcon "github.com/gtaylor/factorio-rcon"
 )
 
 var fbot = bot{}
 
 type state struct { // Lua fbot internal representation
-	Pos            position `json:"position"`
-	Walking        bool     `json:"walking_state"`
-	Mining         bool     `json:"mining_state"`
-	ResourceMining bool     `json:"mining_resource_state"`
-	Placing        bool     `json:"placing_state"`
-	Clearing       bool     `json:"clearing_state"`
-	Building       bool     `json:"building_state"`
+	Pos            position       `json:"position"`
+	Walking        bool           `json:"walking_state"`
+	Mining         bool           `json:"mining_state"`
+	ResourceMining bool           `json:"mining_resource_state"`
+	Placing        bool           `json:"placing_state"`
+	Clearing       bool           `json:"clearing_state"`
+	Building       bool           `json:"building_state"`
+	Inventory      map[string]int `json:"inv"`
 }
 
 type task func(*bot) error

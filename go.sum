@@ -1,8 +1,11 @@
 github.com/beefsack/go-astar v0.0.0-20200827232313-4ecf9e304482 h1:p4g4uok3+r6Tg6fxXEQUAcMAX/WdK6WhkQW9s0jaT7k=
 github.com/beefsack/go-astar v0.0.0-20200827232313-4ecf9e304482/go.mod h1:Cu3t5VeqE8kXjUBeNXWQprfuaP5UCIc5ggGjgMx9KFc=
+github.com/google/go-cmp v0.5.6 h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=
+github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/gtaylor/factorio-rcon v0.0.0-20170109054031-61bdfe779ea6 h1:EKfjwkDEooszNoSo7oYcGluDzhRvPso/ksZnEI98tW4=
 github.com/gtaylor/factorio-rcon v0.0.0-20170109054031-61bdfe779ea6/go.mod h1:5iDjR4TEISfNnO+1qwroiRrvxGYHBXQlq4XtYbLnDGQ=
 github.com/lmorg/readline v0.0.0-20210316231630-be4b7d79fc3a h1:xiaNGfMrhqdK89RvLnc6WAe4Pe/HKaluZmipsYF3E0o=
 github.com/lmorg/readline v0.0.0-20210316231630-be4b7d79fc3a/go.mod h1:DidBcghSSS00hj06CkehMGDhZ/25vZDdydkeTVUy6lY=
 golang.org/x/sys v0.0.0-20210316164454-77fc1eacc6aa h1:ZYxPR6aca/uhfRJyaOAtflSHjJYiktO7QnJC5ut7iY4=
 golang.org/x/sys v0.0.0-20210316164454-77fc1eacc6aa/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=

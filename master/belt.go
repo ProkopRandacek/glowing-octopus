@@ -5,8 +5,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/beefsack/go-astar"
 	"math"
+
+	"github.com/beefsack/go-astar"
 )
 
 type tile struct {

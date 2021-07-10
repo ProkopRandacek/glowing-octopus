@@ -166,6 +166,7 @@ function write_rocks() -- the amount of rocks is tiny, this function can export 
 end
 
 function write_state()
+	bot.get_main_inventory().sort_and_merge()
 	state = {
 		["position"] = bot.position,
 		["walking_state"] = walking_state.walking,
@@ -173,7 +174,8 @@ function write_state()
 		["mining_resource_state"] = resource_mining,
 		["placing_state"] = placing,
 		["clearing_state"] = clearing,
-		["building_state"] = building
+		["building_state"] = building,
+		["inv"] = bot.get_main_inventory().get_contents()
 	}
 	game.write_file("state.json", game.table_to_json(state) .. "\n")
 end

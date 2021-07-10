@@ -21,7 +21,7 @@ func main() {
 		return
 	}
 
-	fbot.allocWater(makeBox(-224, -224, 224, 224))
+	fbot.allocWater(makeBox(-224, -224, 224, 224)) // the starting area
 
 	resources, err := fbot.getResources(box{position{-700, -700}, position{700, 700}}) // get the start area ores
 	if err != nil {

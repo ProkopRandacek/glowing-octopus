@@ -27,6 +27,9 @@ func (b *bot) waitForTaskDone() { // Waits until task is done.
 	fmt.Println()
 }
 
+func (b *bot) mineRawResources(map[string]int) {
+}
+
 func (b *bot) getResources(box box) (map[string][]position, error) {
 	filename := scriptFolder + "resrc.json"
 	err := os.Remove(filename)
