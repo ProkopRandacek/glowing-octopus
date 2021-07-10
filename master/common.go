@@ -59,3 +59,52 @@ func (b *Box) Round() {
 func box(a, b, c, d float64) Box { // a shortcut
 	return Box{Position{a, b}, Position{c, d}}
 }
+
+func Find(slice []string, val string) bool {
+    for _, item := range slice {
+        if item == val {
+            return true
+        }
+    }
+    return false
+}
+
+func getRawItemsFromItem(num float64, item string) map[string]float64 {
+	stopItems := []string{"iron-plate", "copper-plate"}
+	out := map[string]float64{}
+	val, ok := recipes[item]
+
+	if !ok || Find(stopItems, item) {
+		return map[string]float64{item: num}
+	}
+
+	for _, d := range val.Deps {
+		n := getRawItemsFromItem(float64(d.Count) * num / float64(val.CraftNum), d.Name)
+		for n, c := range n {
+			out[n] += c
+		}
+	}
+
+	return out
+}
+
+func calcBPItems([]Building) map[string]int {
+	buldingsCount := map[string]int{}
+	for _, b := range []Building{} {
+		buldingsCount[b.Name]++
+	}
+
+	items := map[string]float64{}
+
+	for building, count := range buldingsCount {
+		for n, c := range getRawItemsFromItem(float64(count), building,) {
+			items[n] += c
+		}
+	}
+	itemInts := map[string]int{}
+	for k, v := range items {
+		itemInts[k] = int(math.Ceil(v))
+	}
+
+	return itemInts
+}

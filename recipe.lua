@@ -30,14 +30,12 @@ for i, t in pairs(data.table) do
 	items[i] = t.name
 
 	recipes[t.name] = {}
-	if fluids[t.name] == true then
-		recipes[t.name].fluid = true
-	else
-		recipes[t.name].fluid = false
-	end
+	recipes[t.name].fluid = fluids[t.name]
+
 	if t.result_count == nil then t.result_count = 1 end
 	if t.energy_required == nil then t.energy_required = 0.5 end
 	recipes[t.name].craftTime = t.energy_required / t.result_count
+	recipes[t.name].resultCount = t.result_count
 
 	recipes[t.name].deps = {}
 

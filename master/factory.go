@@ -25,6 +25,7 @@ type RecipeDep struct {
 
 type Item struct {
 	CraftTime float64     `json:"craftTime"` // craft_time / craft_amount
+	CraftNum  int         `json:"resultCount"`
 	Liquid    bool        `json:"liquid"`
 	Deps      []RecipeDep `json:"deps"`
 }
@@ -34,7 +35,7 @@ type Building struct {
 	Rotation  int      `json:"rotation"`
 	CraftItem string   `json:"recipe"`
 	Pos       Position `json:"pos"`
-	Ugbt      string   `json:"ugbt"`
+	Ugbt      string   `json:"ugbt"` // underground belt type - "input" or "output"
 }
 
 func loadRecipes() error {

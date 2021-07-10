@@ -140,6 +140,9 @@ func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 
 func (m *Mapper) AllocBelt(tiles []Tile) {
 	for _, t := range tiles {
-		m.forceAlloc(box(t.Pos.X, t.Pos.Y, t.Pos.X+1, t.Pos.Y+1))
+		space := box(t.Pos.X, t.Pos.Y, t.Pos.X+1, t.Pos.Y)
+		m.forceAlloc(space)
+		bot.clearAll(space)
+		bot.waitForTaskDone()
 	}
 }
