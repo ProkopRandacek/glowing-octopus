@@ -114,7 +114,7 @@ func (m *Mapper) FindBeltPath(from, to Position) []Tile {
 	return tilePath
 }
 
-func (m *Mapper) BeltToBP(tiles []Tile) []Building {
+func (m *Mapper) TileArrayToBP(tiles []Tile) []Building {
 	bp := []Building{}
 	wasLastUg := false
 	for _, t := range tiles {

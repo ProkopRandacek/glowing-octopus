@@ -14,14 +14,13 @@ var recipes map[string]Item
 
 type SharedDepLocation struct {
 	Name string
-	Dims Box
+	Pos Position
 	Left float64
 }
 
 type RecipeDep struct {
 	Name        string `json:"name"`
 	Count       int    `json:"count"`
-	MakeFactory bool
 }
 
 type Item struct {
@@ -58,38 +57,35 @@ func loadRecipes() error {
 	return nil
 }
 
-func (b *Bot) findSharedResource(item string, amount float64) (Position, error) {
+// returns the index in b.SharedResources[item] or error
+func (b *Bot) findSharedResource(item string, amount float64) (int, error) {
 	for i, r := range b.SharedResources[item] {
 		if r.Left >= amount {
-			b.SharedResources[item][i].Dims.Tl.X++
 			b.SharedResources[item][i].Left -= amount
-			r.Dims.Tl.Y += 2
-			return r.Dims.Tl, nil
+			return i, nil
 		}
 	}
 
 	// if the code gets here, it means there wasn't found any fitting location
-
 	oreName := strings.Split(item, "-")[0]
-	if item != "coal" {
+	if item != "coal" { // coal is only coal
 		oreName += "-ore"
 	}
 
 	for i, p := range b.Mapper.OrePatches[oreName] {
 		pos, output := b.newMiners(p)
-		space, err := b.newSmelters(pos, output)
+		pos, err := b.newSmelters(pos, output)
 		if err != nil {
-			return Position{}, err
+			return -1, err
 		}
 
-		space.Tl.X += 2
-		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, space)
-		b.SharedResources[item] = append(b.SharedResources[item], SharedDepLocation{Name: item, Dims: space, Left: output})
-		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:i], b.Mapper.OrePatches[oreName][i+1:]...)
+		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, pos)
+		b.SharedResources[item] = append(b.SharedResources[item], SharedDepLocation{Name: item, Pos: pos, Left: output}) // add the pos to shared resources
+		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:i], b.Mapper.OrePatches[oreName][i+1:]...) // remove the patch from mapper, as it no longer can be used
 		return b.findSharedResource(item, amount)
 	}
 
-	return Position{}, errors.New("No patches ore resource locations found. Explore some more")
+	return -1, errors.New("No patches ore resource locations found. Explore some more")
 }
 
 func (b *Bot) resolveBuildingName(curr string) string {
@@ -121,6 +117,29 @@ func (b *Bot) resolveBuildingName(curr string) string {
 	return curr
 }
 
+func (b *Bot) genFactory(pos Position, itemName string, asmCount int, bp Blueprint) []Building {
+	out := make([]Building, asmCount*len(bp.Buildings))
+
+	bCount := 0 // count of building placed
+	for i := 0; i < asmCount; i++ {
+		for _, building := range bp.Buildings {
+			building.Pos.Y += bp.Dims.Y*float64(i) + pos.Y
+			building.Pos.X += pos.X
+			out[bCount] = building
+
+			if strings.HasPrefix(out[bCount].Name, "assembling-machine") {
+				out[bCount].CraftItem = itemName
+			}
+
+			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
+
+			bCount++
+		}
+	}
+
+	return out
+}
+
 func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	bp := noFluidBp
 	item, exists := recipes[itemStr]
@@ -141,8 +160,9 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 			}
 		} else {
 			fmt.Printf("%s is shared. I will look for it.\n", d.Name)
-			var err error
-			resources[d.Name], err = b.findSharedResource(d.Name, ps*float64(d.Count))
+			index, err := b.findSharedResource(d.Name, ps*float64(d.Count))
+			resources[d.Name] = b.SharedResources[d.Name][index].Pos
+
 			if err != nil {
 				return Position{}, err
 			}
@@ -157,8 +177,6 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	fmt.Println("all dependencies resolved")
 	asmCount := int(math.Ceil(float64(ps * item.CraftTime))) // count of assemblers needed
 
-	out := make([]Building, asmCount*len(bp.Buildings))
-
 	space := Box{Tl: Position{0, 0}, Br: Position{bp.Dims.X, bp.Dims.Y * float64(asmCount)}}
 	b.Mapper.findSpace(&space)
 	if b.Mapper.alloc(space) < 0 {
@@ -169,22 +187,7 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	b.waitForTaskDone()
 	fmt.Println("cleared space for factory")
 
-	bCount := 0 // count of building placed
-	for i := 0; i < asmCount; i++ {
-		for _, building := range bp.Buildings {
-			building.Pos.Y += bp.Dims.Y*float64(i) + space.Tl.Y
-			building.Pos.X += space.Tl.X
-			out[bCount] = building
-
-			if strings.HasPrefix(out[bCount].Name, "assembling-machine") {
-				out[bCount].CraftItem = itemStr
-			}
-
-			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
-
-			bCount++
-		}
-	}
+	buildings := b.genFactory(space.Tl, itemStr, asmCount, bp)
 
 	i := 0
 	for key := range resources {
@@ -198,7 +201,7 @@ func (b *Bot) newFactory(itemStr string, ps float64) (Position, error) {
 	}
 
 	fmt.Println("building factory")
-	b.build(out)
+	b.build(buildings)
 	b.waitForTaskDone()
 
 	return Position{space.Br.X, space.Br.Y + 2}, nil
@@ -281,10 +284,10 @@ func (b *Bot) newMiners(patch OrePatch) (Position, float64) {
 	b.build(out[:bCount])
 	b.waitForTaskDone()
 
-	return space.Br, float64(minerCount * 2) // rate is 0.5/s except for uranium TODO
+	return space.Br, float64(minerCount) / 0.5 // rate is 0.5/s except for uranium TODO
 }
 
-func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
+func (b *Bot) newSmelters(resPos Position, maxInput float64) (Position, error) {
 	beltMax := 15.0
 	if b.BeltLevel == "fast" {
 		beltMax = 30.0
@@ -304,7 +307,7 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 
 	b.Mapper.findSpace(&space)
 	if b.Mapper.alloc(space) < 0 {
-		return Box{}, errors.New("Could not find space to allocate")
+		return Position{}, errors.New("Could not find space to allocate")
 	}
 	b.clearAll(space)
 	b.waitForTaskDone()
@@ -341,11 +344,8 @@ func (b *Bot) newSmelters(resPos Position, maxInput float64) (Box, error) {
 	b.build(out)
 	b.waitForTaskDone()
 
-	return Box{Tl: Position{
-		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount),
+	return Position{
+		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount) + 1,
 		6,
-	}, Br: Position{
-		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount) + smeltingFooterBp.Dims.X - 1,
-		6,
-	}}, nil
+	}, nil
 }
