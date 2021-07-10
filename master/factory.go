@@ -48,7 +48,18 @@ func (b *bot) findSharedResource(item string, amount float64) (int, error) {
 		oreName += "-ore"
 	}
 
-	for i, p := range b.Mapper.OrePatches[oreName] {
+	botPos := b.state().Pos
+	minDist := -1
+	minIndex := -1
+	for i := range b.Mappe.OrePatches[oreName] {
+		if dist := math.Sqrt(botPos.X * botPos.X + botPos.Y * botPos.Y); dist < minDist {
+			minDist = dist
+			minIndex = i
+		}
+	}
+
+	if minIndex != -1 {
+		p := b.Mapper.OrePatches[oreName][minIndex]
 		_, output := b.newMiners(p)
 		pos, err := b.newSmelters(output)
 		if err != nil {
@@ -57,7 +68,7 @@ func (b *bot) findSharedResource(item string, amount float64) (int, error) {
 
 		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, pos)
 		b.SharedResources[item] = append(b.SharedResources[item], sharedDepLocation{Name: item, Pos: pos, Left: output}) // add the pos to shared resources
-		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:i], b.Mapper.OrePatches[oreName][i+1:]...)   // remove the patch from mapper, as it no longer can be used
+		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:index], b.Mapper.OrePatches[oreName][index+1:]...)   // remove the patch from mapper, as it no longer can be used
 		return b.findSharedResource(item, amount)
 	}
 
@@ -163,7 +174,6 @@ func (b *bot) newFactory(itemStr string, ps float64) (position, error) {
 	}
 
 	fmt.Println("all dependencies resolved")
-	fmt.Println("allocated space for factory")
 	b.clearAll(space)
 	b.waitForTaskDone()
 	fmt.Println("cleared space for factory")
@@ -326,7 +336,7 @@ func (b *bot) newSmelters(maxInput float64) (position, error) {
 	b.waitForTaskDone()
 
 	return position{
-		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount) + 1,
+		smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount) + 2,
 		6,
 	}, nil
 }

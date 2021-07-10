@@ -446,46 +446,6 @@ var smeltingFooterBp = blueprint{
 		},
 		{
 			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{1, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{2, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{3, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{4, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{5, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{6, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{7, 6},
-		},
-		{
-			Name:     "belt",
-			Rotation: dirEast,
-			Pos:      position{8, 6},
-		},
-		{
-			Name:     "belt",
 			Rotation: dirNorth,
 			Pos:      position{0, 7},
 		},
