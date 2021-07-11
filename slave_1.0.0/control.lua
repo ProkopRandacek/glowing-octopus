@@ -112,15 +112,22 @@ function mark_pos(color, text, x, y)
 end
 
 function write_resrc(area)
-	output = { ["iron-ore"] = {}, ["copper-ore"] = {}, ["coal"] = {}, ["stone"] = {}, ["uranium-ore"] = {}, ["crude-oil"] = {},
-			   ["iron-ore-a"] = {}, ["copper-ore-a"] = {}, ["coal-a"] = {}, ["stone-a"] = {}, ["uranium-ore-a"] = {}, ["crude-oil-a"] = {}}
+	output = {
+		["pos"] = { ["iron-ore"] = {}, ["copper-ore"] = {}, ["coal"] = {}, ["stone"] = {}, ["uranium-ore"] = {}, ["crude-oil"] = {} },
+		["am"] = { ["iron-ore"] = {}, ["copper-ore"] = {}, ["coal"] = {}, ["stone"] = {}, ["uranium-ore"] = {}, ["crude-oil"] = {} }
+	}
 	for i, e in pairs(game.surfaces[1].find_entities_filtered{area = area, type="resource"}) do
-		table.insert(output[e.name], {x = e.position.x, y = e.position.y})
-		table.insert(output[e.name .. "-a"], e.amount)
+		table.insert(output["pos"][e.name], {x = e.position.x, y = e.position.y})
+		table.insert(output["am"][e.name], e.amount)
 	end
-	for k, v in pairs(output) do -- remove empty keys
+	for k, v in pairs(output["pos"]) do -- remove empty keys
 		if #v == 0 then
-			output[k] = nil
+			output["pos"][k] = nil
+		end
+	end
+	for k, v in pairs(output["am"]) do -- remove empty keys
+		if #v == 0 then
+			output["am"][k] = nil
 		end
 	end
 	game.write_file("resrc.json", game.table_to_json(output))
