@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"math"
 
 	rcon "github.com/gtaylor/factorio-rcon"
 )
@@ -138,4 +139,26 @@ func (b *bot) doTask() error {
 	b.TaskList.Remove(b.TaskList.Front())
 
 	return err
+}
+
+func (b *bot) findPlaceToMine(item string, count int) (position, error) {
+	index := -1
+	minDist := -1.0
+	state, _ := b.state()
+	pos := state.Pos
+
+	for i, t := range b.Mapper.Resources[item] {
+		if dist := math.Pow(t.X - pos.X, 2) + math.Pow(t.Y - pos.Y, 2); (dist < minDist || index == -1) && b.Mapper.ResourceAmounts[item][i] >= count {
+			index = i
+			minDist = dist
+		}
+	}
+
+	if index == -1 {
+		return position{}, errors.New("no tile found")
+	}
+
+	b.Mapper.ResourceAmounts[item][index] -= count
+
+	return b.Mapper.Resources[item][index], nil
 }

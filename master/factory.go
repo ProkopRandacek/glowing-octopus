@@ -53,7 +53,7 @@ func (b *bot) findSharedResource(item string, amount float64) (int, error) {
 	minDist := -1.0
 	minIndex := -1
 	for i, p := range b.Mapper.OrePatches[oreName] {
-		if dist := math.Sqrt(math.Pow(botPos.X - p.Dims.Tl.X, 2) + math.Pow(botPos.Y - p.Dims.Tl.Y, 2)); dist < minDist {
+		if dist := math.Sqrt(math.Pow(botPos.X - p.Dims.Tl.X, 2) + math.Pow(botPos.Y - p.Dims.Tl.Y, 2)); dist < minDist || minIndex == -1 {
 			minDist = dist
 			minIndex = i
 		}
