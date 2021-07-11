@@ -112,9 +112,11 @@ function mark_pos(color, text, x, y)
 end
 
 function write_resrc(area)
-	output = { ["iron-ore"] = {}, ["copper-ore"] = {}, ["coal"] = {}, ["stone"] = {}, ["uranium-ore"] = {}, ["crude-oil"] = {}}
+	output = { ["iron-ore"] = {}, ["copper-ore"] = {}, ["coal"] = {}, ["stone"] = {}, ["uranium-ore"] = {}, ["crude-oil"] = {},
+			   ["iron-ore-a"] = {}, ["copper-ore-a"] = {}, ["coal-a"] = {}, ["stone-a"] = {}, ["uranium-ore-a"] = {}, ["crude-oil-a"] = {}}
 	for i, e in pairs(game.surfaces[1].find_entities_filtered{area = area, type="resource"}) do
 		table.insert(output[e.name], {x = e.position.x, y = e.position.y})
+		table.insert(output[e.name .. "-a"], e.amount)
 	end
 	for k, v in pairs(output) do -- remove empty keys
 		if #v == 0 then
