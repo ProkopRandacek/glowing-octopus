@@ -91,11 +91,8 @@ func (b *bot) collectItemsForBP(bp []building) {
 
 func (b *bot) getResources(box box) (map[string][]position, error) {
 	filename := scriptFolder + "resrc.json"
-	err := os.Remove(filename)
-	if err != nil {
-		return nil, err
-	}
-	_, err = b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
+	os.Remove(filename)
+	_, err := b.conn.Execute(fmt.Sprintf("/writeresrc [[%.2f,%.2f],[%.2f,%.2f]]", box.Tl.X, box.Tl.Y, box.Br.X, box.Br.Y))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +118,10 @@ func (b *bot) getResources(box box) (map[string][]position, error) {
 		return nil, err
 	}
 
-	var resources map[string][]position
+	var resources struct {
+		Positions map[string][]position `json:"pos"`
+		Amounts map[string][]int `json:"am"`
+	}
 	err = json.Unmarshal(dat, &resources)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,8 @@ func (b *bot) getResources(box box) (map[string][]position, error) {
 
 	b.Mapper.LoadedBoxes = append(b.Mapper.LoadedBoxes, box)
 
-	return resources, nil
+	b.Mapper.ResourceAmounts = resources.Amounts
+	return resources.Positions, nil
 }
 
 func (b *bot) allocWater(box box) error {

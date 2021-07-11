@@ -23,6 +23,7 @@ type mapper struct {
 	WaterTiles     []position            // the exact tiles that are in water
 	WaterBox       box                   // water boxes for fast intersection check
 	Resources      map[string][]position // all the individual ore tiles
+	ResourceAmounts map[string][]int // amount for each ore tile. Same indexing as in Resources.
 	OrePatches     map[string][]orePatch // ore tiles grouped together into patches
 	LoadedBoxes    []box                 // all the area boxes that we requested from the game
 }
