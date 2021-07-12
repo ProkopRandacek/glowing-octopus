@@ -179,3 +179,8 @@ func (m *mapper) free(id int) bool {
 	}
 	return false
 }
+
+func (m *mapper) findPlaceToMine(item string, count int) position {
+	// TODO: can run out of the resource, is often far away...
+	return m.Resources[item][0]
+}

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -20,14 +22,71 @@ func (b *bot) waitForTaskDone() { // Waits until task is done.
 		if err != nil {
 			panic("error while waiting for task: " + err.Error())
 		}
-		if !(s.Walking || s.Mining || s.ResourceMining || s.Placing || s.Clearing || s.Building) {
+		if !(s.Walking || s.Mining || s.ResourceMining || s.Placing || s.Puting || s.Taking || s.Clearing || s.Building) {
 			break
 		}
 	}
 	fmt.Println()
 }
 
-func (b *bot) mineRawResources(map[string]int) {
+func (b *bot) collectItemsForBP(bp []building) {
+
+	// TODO collecting from mall and stuff
+
+	state, _ := b.state()
+	items := howMuchMore(state.Inventory, calcBPItems(bp))
+
+	fmt.Println("I need to gather %v", items)
+
+	for item, count := range items {
+		if count == 0 {
+			continue
+		}
+		item = b.resolveBuildingName(item)
+		if item == "iron-plate" || item == "copper-plate" { // things that we need to smelt
+			fmt.Println(item, count)
+			oreName := strings.Split(item, "-")[0] + "-ore"
+			b.mineResource(b.Mapper.findPlaceToMine(oreName, count), count, oreName)
+			b.waitForTaskDone()
+
+			coalCount := int(math.Ceil(float64(count) / 13.0))
+
+			b.mineResource(b.Mapper.findPlaceToMine("coal", coalCount), coalCount, "coal")
+			b.waitForTaskDone()
+
+			state, _ := b.state()
+			furnacePos := state.Pos
+			furnaceBox := makeBox(furnacePos.X-2, furnacePos.Y-2, furnacePos.X+2, furnacePos.Y+2)
+
+			b.Mapper.findSpace(&furnaceBox)
+			furnacePos = position{furnaceBox.Tl.X + 2, furnaceBox.Tl.Y + 2}
+			b.clearAll(furnaceBox)
+			b.waitForTaskDone()
+
+			allocid, _ := b.Mapper.alloc(furnaceBox)
+
+			b.place(furnacePos, "stone-furnace")
+			b.waitForTaskDone()
+			furnacePos.X -= 0.5
+			b.put(furnacePos, oreName, count, 2)
+			b.put(furnacePos, "coal", coalCount, 1)
+			time.Sleep(2 * time.Second)
+			b.take(furnacePos, item, count, 3)
+			b.waitForTaskDone()
+			b.mine(furnacePos)
+			b.waitForTaskDone()
+
+			b.Mapper.free(allocid)
+		} else if item == "wood" {
+			fmt.Println("need wood ", count)
+		}
+	}
+	fmt.Println("Resource gathering done")
+
+	for _, building := range bp {
+		b.craft(building.Name, 1)
+		b.waitForTaskDone()
+	}
 }
 
 func (b *bot) getResources(box box) (map[string][]position, error) {
@@ -110,8 +169,6 @@ func (b *bot) allocWater(box box) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(water)
 
 	for _, pos := range water {
 		b.Mapper.forceAlloc(makeBox(pos.X, pos.Y, pos.X+32, pos.Y+32))

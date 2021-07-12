@@ -1,6 +1,7 @@
 require("util")
 
 local water_chunk_size = 32
+local dont_mine = {"player", "corpse", "character", "flying-text", "resource", "fish", "smoke-with-trigger", "fire", "explosion"}
 
 local tick = 0
 local inited = false
@@ -173,6 +174,8 @@ function write_state()
 		["mining_state"] = mining,
 		["mining_resource_state"] = resource_mining,
 		["placing_state"] = placing,
+		["puting_state"] = puting,
+		["taking_state"] = taking,
 		["clearing_state"] = clearing,
 		["building_state"] = building,
 		["inv"] = bot.get_main_inventory().get_contents()
@@ -193,7 +196,7 @@ function mine(pos)
 	game.print("mine at " .. game.table_to_json(pos))
 	walkto({pos[1] + 1.5, pos[2]})
 	mining = true
-	mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true}[1]
+	mining_target = surface.find_entities_filtered{limit=1, position=pos, radius=1.0, type=dont_mine, invert=true}[1]
 	if mining_target == nil then
 		game.print("mine target entity not found")
 		return
@@ -221,7 +224,7 @@ function clear(area, t)
 	clearing_type = t
 
 	if clearing_type == "all" then
-		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true, limit=1}
+		clearing_targets = surface.find_entities_filtered{area=clearing_area, type=dont_mine, invert=true, limit=1}
 	elseif clearing_type == "nature" then
 		clearing_targets = surface.find_entities_filtered{area=clearing_area, type={"tree", "simple-entity"}, limit=1}
 	end
@@ -286,7 +289,7 @@ function putin(position, item, amount, slot)
 
 	if toinsert == 0 then
 		game.print("nothing to insert cuz toinsert == 0")
-		return true
+		return 0
 	end
 	if not otherinv then
 		game.print("no slot")
@@ -297,10 +300,11 @@ function putin(position, item, amount, slot)
 	--if we already failed for trying to insert no items, then if no items were inserted, it must be because it is full
 	if inserted == 0 then
 		game.print("nothing to insert cuz inserted == 0")
-		return true
+		return 0
 	end
 
 	bot.remove_item{name=item, count=inserted}
+	return inserted
 end
 
 function takeout(position, item, amount, slot)
@@ -315,18 +319,14 @@ function takeout(position, item, amount, slot)
 		return
 	end
 	if totake == 0 then
-		game.print("nothing to take cuz totake == 0")
-		return
+		game.print("waiting for smelter")
+		return 0
 	end
 
 	local taken = bot.insert{name=item, count=totake}
 
-	if taken == 0 then
-		game.print("nothing taken cuz taken == 0")
-		return
-	end
-
-	otherinv.remove{name=item, count=totake}
+	otherinv.remove{name=item, count=taken}
+	return taken
 end
 
 function putin_safe(pos, item, amount, slot)
@@ -505,11 +505,27 @@ script.on_event(defines.events.on_tick, function(event)
 			game.print("walking done")
 		end
 	elseif puting then
-		putin(puting_pos, puting_item, puting_amount, puting_slot)
-		puting = false
+		local put = putin(puting_pos, puting_item, puting_amount, puting_slot)
+		-- if puting into furnace source slot and stuff same as taking
+		if put ~= puting_amount and puting_slot == 2 then
+			puting = true
+			puting_amount = puting_amount - put
+		else
+			puting = false
+		end
 	elseif taking then
-		takeout(taking_pos, taking_item, taking_amount, taking_slot)
-		taking = false
+		if taking_amount == 0 then
+			taking = false
+			return
+		end
+		local taken = takeout(taking_pos, taking_item, taking_amount, taking_slot)
+		-- if taking from furnace result slot && did not take enough yet, wait a tick and try to take again
+		if taken ~= taking_amount and taking_slot == 3 then
+			taking = true
+			taking_amount = taking_amount - taken
+		else
+			taking = false
+		end
 	elseif resource_mining then
 		i_have = bot.get_item_count(resource_mining_name)
 		i_need = resource_mining_amount
@@ -551,7 +567,7 @@ script.on_event(defines.events.on_tick, function(event)
 	elseif clearing then
 		if clearing_type == "all" then
 			game.print("clearing all")
-			clearing_target = surface.find_entities_filtered{area=clearing_area, type={"player", "corpse", "character", "flying-text", "resource", "fish"}, invert=true, limit=1}[1]
+			clearing_target = surface.find_entities_filtered{area=clearing_area, type=dont_mine, invert=true, limit=1}[1]
 		elseif clearing_type == "nature" then
 			clearing_target = surface.find_entities_filtered{area=clearing_area, type="tree", limit=1}[1]
 		end
@@ -561,7 +577,7 @@ script.on_event(defines.events.on_tick, function(event)
 			mining = false
 			game.print("clearing done")
 		else
-			game.print("found next thing to clear. Its a " .. clearing_target.name)
+			game.print("found next thing to clear. Its a " .. clearing_target.type .. " " .. clearing_target.name)
 			mine({clearing_target.position.x, clearing_target.position.y})
 		end
 	end

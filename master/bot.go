@@ -19,6 +19,8 @@ type state struct { // Lua fbot internal representation
 	Mining         bool           `json:"mining_state"`
 	ResourceMining bool           `json:"mining_resource_state"`
 	Placing        bool           `json:"placing_state"`
+	Puting         bool           `json:"puting_state"`
+	Taking         bool           `json:"taking_state"`
 	Clearing       bool           `json:"clearing_state"`
 	Building       bool           `json:"building_state"`
 	Inventory      map[string]int `json:"inv"`

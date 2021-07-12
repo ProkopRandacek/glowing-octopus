@@ -92,7 +92,7 @@ func getRawItemsFromItem(num float64, item string) map[string]float64 {
 func calcBPItems(bs []building) map[string]int {
 	buildingsCount := map[string]int{}
 	for _, b := range bs {
-		buildingsCount[b.Name]++
+		buildingsCount[fbot.resolveBuildingName(b.Name)]++
 	}
 
 	items := map[string]float64{}
@@ -194,4 +194,13 @@ func isBorderSharedWithBox(box box, boxes []box, ignore int) bool {
 	}
 
 	return false
+}
+
+// takes bot inventory and item list and returns how many more of each item it needs.
+func howMuchMore(have, need map[string]int) map[string]int {
+	reallyNeed := map[string]int{}
+	for item, count := range need {
+		reallyNeed[item] = int(math.Max(float64(count-have[item]), 0))
+	}
+	return reallyNeed
 }

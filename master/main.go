@@ -31,7 +31,8 @@ func main() {
 	}
 	fbot.Mapper.readResources(resources)
 
-	fmt.Println(fbot.newFactory("inserter", 4))
+	fbot.clearAll(makeBox(-50, -50, 50, 50))
+	fbot.waitForTaskDone()
 
-	fbot.runShell()
+	fbot.collectItemsForBP(noFluidBp.Buildings)
 }
