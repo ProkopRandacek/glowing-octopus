@@ -27,7 +27,7 @@ type state struct { // Lua fbot internal representation
 	Inventory      map[string]int `json:"inv"`
 }
 
-type task func(*bot) error
+type task func(*bot) (bool, error)
 
 type bot struct {
 	conn            *rcon.RCON
@@ -134,9 +134,11 @@ func (b *bot) doTask() error {
 		return errors.New("no tasks left")
 	}
 
-	err := b.TaskList.Front().Value.(task)(b)
+	done, err := b.TaskList.Front().Value.(task)(b)
 
-	b.TaskList.Remove(b.TaskList.Front())
+	if done {
+		b.TaskList.Remove(b.TaskList.Front())
+	}
 
 	return err
 }
