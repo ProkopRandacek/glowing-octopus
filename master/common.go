@@ -92,7 +92,7 @@ func getRawItemsFromItem(num float64, item string) map[string]float64 {
 func calcBPItems(bs []building) map[string]int {
 	buildingsCount := map[string]int{}
 	for _, b := range bs {
-		buildingsCount[fbot.resolveBuildingName(b.Name)]++
+		buildingsCount[octopus.resolveBuildingName(b.Name)]++
 	}
 
 	items := map[string]float64{}

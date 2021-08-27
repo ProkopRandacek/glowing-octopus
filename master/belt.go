@@ -50,7 +50,7 @@ func (t *tile) underground(maxBeltLen int) []tile {
 }
 
 func (t *tile) isEmpty() bool {
-	return fbot.Mapper.isTileEmpty(t.Pos)
+	return octopus.Mapper.isTileEmpty(t.Pos)
 }
 
 //PathNeighborCost calculates the cost of the move from tile to its neighbour
@@ -89,9 +89,9 @@ func (t tile) PathNeighbors() []astar.Pather {
 	var out []astar.Pather
 
 	maxBeltLen := 6
-	if fbot.BeltLevel == "fast" {
+	if octopus.BeltLevel == "fast" {
 		maxBeltLen = 8
-	} else if fbot.BeltLevel == "express" {
+	} else if octopus.BeltLevel == "express" {
 		maxBeltLen = 10
 	}
 
@@ -122,7 +122,7 @@ func (m *mapper) allocBelt(tiles []tile) {
 	for _, t := range tiles {
 		space := makeBox(t.Pos.X, t.Pos.Y, t.Pos.X+1, t.Pos.Y)
 		m.forceAlloc(space) // We don't care if we alloc over (shouldn't ever happen actually) something or too close to something
-		fbot.clearAll(space)
-		fbot.waitForTaskDone()
+		octopus.clearAll(space)
+		octopus.waitForTaskDone()
 	}
 }

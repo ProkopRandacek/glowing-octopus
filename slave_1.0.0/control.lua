@@ -470,8 +470,8 @@ end)
 function init()
 	surface = game.surfaces[1]
 
-	if global.fbot == nil then
-		game.print("no fbot found. Imma create it")
+	if global.octopus == nil then
+		game.print("no octopus found. Imma create it")
 		bot = surface.create_entity{
 			name="character",
 			position={3, 2},
@@ -482,10 +482,10 @@ function init()
 		bot.insert({name="burner-mining-drill", count=1}) -- the starting inventory
 		bot.insert({name="stone-furnace", count=1})
 		bot.color = {r=1, g=1, b=1}
-		global.fbot = bot
+		global.octopus = bot
 	else
-		game.print("fbot already exists imma use it")
-		bot = global.fbot
+		game.print("octopus already exists imma use it")
+		bot = global.octopus
 	end
 	game.print("init done")
 	inited = true

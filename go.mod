@@ -1,4 +1,4 @@
-module github.com/prokoprandacek/fbot
+module github.com/prokoprandacek/glowing-octopus
 
 go 1.16
 

@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"math"
+	"os"
 
 	rcon "github.com/gtaylor/factorio-rcon"
 )
 
-var fbot = bot{}
+var octopus = bot{}
 
-type state struct { // Lua fbot internal representation
+type state struct { // Lua bot internal representation
 	Pos            position       `json:"position"`
 	Walking        bool           `json:"walking_state"`
 	Mining         bool           `json:"mining_state"`
@@ -46,21 +46,21 @@ func newBot(address, password string) error {
 		return err
 	}
 
-	fbot.conn, err = rcon.Dial(address)
+	octopus.conn, err = rcon.Dial(address)
 	if err != nil {
 		return err
 	}
 
-	err = fbot.conn.Authenticate(password)
+	err = octopus.conn.Authenticate(password)
 	if err != nil {
 		return err
 	}
 
-	fbot.Mapper = mapper{}
-	fbot.Mapper.Resources = make(map[string][]position, 6)
-	fbot.Mapper.OrePatches = make(map[string][]orePatch, 6)
+	octopus.Mapper = mapper{}
+	octopus.Mapper.Resources = make(map[string][]position, 6)
+	octopus.Mapper.OrePatches = make(map[string][]orePatch, 6)
 
-	fbot.Mapper.Resources = map[string][]position{
+	octopus.Mapper.Resources = map[string][]position{
 		"iron-ore":    {},
 		"copper-ore":  {},
 		"coal":        {},
@@ -69,7 +69,7 @@ func newBot(address, password string) error {
 		"crude-oil":   {},
 	}
 
-	fbot.Mapper.OrePatches = map[string][]orePatch{
+	octopus.Mapper.OrePatches = map[string][]orePatch{
 		"iron-ore":    {},
 		"copper-ore":  {},
 		"coal":        {},
@@ -78,14 +78,14 @@ func newBot(address, password string) error {
 		"crude-oil":   {},
 	}
 
-	fbot.TaskList = list.New()
+	octopus.TaskList = list.New()
 
-	fbot.InserterLevel = "fast"
-	fbot.AssemblerLevel = 1
-	fbot.BeltLevel = ""
-	fbot.FurnaceLevel = "stone"
+	octopus.InserterLevel = "fast"
+	octopus.AssemblerLevel = 1
+	octopus.BeltLevel = ""
+	octopus.FurnaceLevel = "stone"
 
-	fbot.SharedResources = map[string][]sharedDepLocation{}
+	octopus.SharedResources = map[string][]sharedDepLocation{}
 
 	return nil
 }
@@ -150,7 +150,7 @@ func (b *bot) findPlaceToMine(item string, count int) (position, error) {
 	pos := state.Pos
 
 	for i, t := range b.Mapper.Resources[item] {
-		if dist := math.Pow(t.X - pos.X, 2) + math.Pow(t.Y - pos.Y, 2); (dist < minDist || index == -1) && b.Mapper.ResourceAmounts[item][i] >= count {
+		if dist := math.Pow(t.X-pos.X, 2) + math.Pow(t.Y-pos.Y, 2); (dist < minDist || index == -1) && b.Mapper.ResourceAmounts[item][i] >= count {
 			index = i
 			minDist = dist
 		}

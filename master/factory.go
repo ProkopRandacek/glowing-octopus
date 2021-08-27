@@ -53,7 +53,7 @@ func (b *bot) findSharedResource(item string, amount float64) (int, error) {
 	minDist := -1.0
 	minIndex := -1
 	for i, p := range b.Mapper.OrePatches[oreName] {
-		if dist := math.Sqrt(math.Pow(botPos.X - p.Dims.Tl.X, 2) + math.Pow(botPos.Y - p.Dims.Tl.Y, 2)); dist < minDist || minIndex == -1 {
+		if dist := math.Sqrt(math.Pow(botPos.X-p.Dims.Tl.X, 2) + math.Pow(botPos.Y-p.Dims.Tl.Y, 2)); dist < minDist || minIndex == -1 {
 			minDist = dist
 			minIndex = i
 		}
@@ -68,8 +68,8 @@ func (b *bot) findSharedResource(item string, amount float64) (int, error) {
 		}
 
 		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, pos)
-		b.SharedResources[item] = append(b.SharedResources[item], sharedDepLocation{Name: item, Pos: pos, Left: output}) // add the pos to shared resources
-		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:minIndex], b.Mapper.OrePatches[oreName][minIndex+1:]...)   // remove the patch from mapper, as it no longer can be used
+		b.SharedResources[item] = append(b.SharedResources[item], sharedDepLocation{Name: item, Pos: pos, Left: output})             // add the pos to shared resources
+		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:minIndex], b.Mapper.OrePatches[oreName][minIndex+1:]...) // remove the patch from mapper, as it no longer can be used
 		return b.findSharedResource(item, amount)
 	}
 

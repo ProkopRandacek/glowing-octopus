@@ -5,7 +5,7 @@
     "title": "Slave",
     "author": "Proicop",
     "contact": "prokop@randacek.dev",
-    "homepage": "https://github.com/ProkopRandacek/fbot/tree/main/slave_1.0.0",
+    "homepage": "https://github.com/ProkopRandacek/glowing-octopus/tree/main/slave_1.0.0",
     "description": "Slaves to the master python code",
     "dependencies": [
         "base >= 1.1.0"

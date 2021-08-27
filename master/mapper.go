@@ -16,16 +16,16 @@ type area struct {
 }
 
 type mapper struct {
-	Areas          []area // marks what areas area allocated
-	AllocIdCounter int    // for area id generation
-	MallMap        map[string]position
-	AllocMap       []box
-	WaterTiles     []position            // the exact tiles that are in water
-	WaterBox       box                   // water boxes for fast intersection check
-	Resources      map[string][]position // all the individual ore tiles
-	ResourceAmounts map[string][]int // amount for each ore tile. Same indexing as in Resources.
-	OrePatches     map[string][]orePatch // ore tiles grouped together into patches
-	LoadedBoxes    []box                 // all the area boxes that we requested from the game
+	Areas           []area // marks what areas area allocated
+	AllocIdCounter  int    // for area id generation
+	MallMap         map[string]position
+	AllocMap        []box
+	WaterTiles      []position            // the exact tiles that are in water
+	WaterBox        box                   // water boxes for fast intersection check
+	Resources       map[string][]position // all the individual ore tiles
+	ResourceAmounts map[string][]int      // amount for each ore tile. Same indexing as in Resources.
+	OrePatches      map[string][]orePatch // ore tiles grouped together into patches
+	LoadedBoxes     []box                 // all the area boxes that we requested from the game
 }
 
 func (o *orePatch) isUnsafe(boxes []box) {
@@ -127,7 +127,7 @@ func (m *mapper) forceAlloc(dims box) int {
 	m.Areas = append(m.Areas, area{dims, m.AllocIdCounter})
 	m.AllocIdCounter++
 
-	fbot.drawBox(dims, color{1, 0, 0})
+	octopus.drawBox(dims, color{1, 0, 0})
 
 	return m.AllocIdCounter - 1
 }

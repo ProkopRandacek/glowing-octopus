@@ -120,7 +120,7 @@ func (b *bot) getResources(box box) (map[string][]position, error) {
 
 	var resources struct {
 		Positions map[string][]position `json:"pos"`
-		Amounts map[string][]int `json:"am"`
+		Amounts   map[string][]int      `json:"am"`
 	}
 	err = json.Unmarshal(dat, &resources)
 	if err != nil {
