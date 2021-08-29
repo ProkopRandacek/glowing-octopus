@@ -33,8 +33,11 @@ type building struct {
 	Ugbt      string   `json:"ugbt"` // underground belt type - "input" or "output"
 }
 
-// returns the index in b.SharedResources[item] or error
+// Returns an index in bot.SharedResources for `amount` of `item`.
+// If it can't find any, it will try to create a new factory for said
+// resource. If that fails, returns an error.
 func (b *bot) findSharedResource(item string, amount float64) (int, error) {
+	// go through available resources and check for a fitting one
 	for i, r := range b.SharedResources[item] {
 		if r.Left >= amount {
 			b.SharedResources[item][i].Left -= amount
@@ -42,40 +45,55 @@ func (b *bot) findSharedResource(item string, amount float64) (int, error) {
 		}
 	}
 
-	// if the code gets here, it means there wasn't found any fitting location
+	//// if the code gets here, it means there wasn't found any fitting location
+
+	// try to create name of raw resource to `item`
 	oreName := strings.Split(item, "-")[0]
 	if item != "coal" { // coal is only coal
 		oreName += "-ore"
 	}
 
+	// find the closest resource
 	state, _ := b.state()
 	botPos := state.Pos
 	minDist := -1.0
 	minIndex := -1
 	for i, p := range b.Mapper.OrePatches[oreName] {
-		if dist := math.Sqrt(math.Pow(botPos.X-p.Dims.Tl.X, 2) + math.Pow(botPos.Y-p.Dims.Tl.Y, 2)); dist < minDist || minIndex == -1 {
+		if dist := math.Sqrt(math.Pow(botPos.X-p.Dims.Tl.X, 2) +
+				math.Pow(botPos.Y-p.Dims.Tl.Y, 2));
+		   dist < minDist || minIndex == -1 {
+
 			minDist = dist
 			minIndex = i
 		}
 	}
 
-	if minIndex != -1 {
-		p := b.Mapper.OrePatches[oreName][minIndex]
-		_, output := b.newMiners(p)
-		pos, err := b.newSmelters(output)
-		if err != nil {
-			return -1, err
-		}
-
-		fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, pos)
-		b.SharedResources[item] = append(b.SharedResources[item], sharedDepLocation{Name: item, Pos: pos, Left: output})             // add the pos to shared resources
-		b.Mapper.OrePatches[oreName] = append(b.Mapper.OrePatches[oreName][:minIndex], b.Mapper.OrePatches[oreName][minIndex+1:]...) // remove the patch from mapper, as it no longer can be used
-		return b.findSharedResource(item, amount)
+	// failed to find a resource
+	if minIndex == -1 {
+		return -1, errors.New("no patches ore resource locations found. Explore some more")
 	}
 
-	return -1, errors.New("no patches ore resource locations found. Explore some more")
+	// build miner and smelters for the resource
+	p := b.Mapper.OrePatches[oreName][minIndex]
+	_, output := b.newMiners(p)
+	pos, err := b.newSmelters(output)
+	if err != nil {
+		return -1, err
+	}
+
+	// add the resource location to bot and remove the or patch
+	fmt.Printf("adding %f of %s at %v to shared resources\n", output, item, pos)
+	b.SharedResources[item] = append(
+		b.SharedResources[item],
+		sharedDepLocation{Name: item, Pos: pos, Left: output})
+	b.Mapper.OrePatches[oreName] = append(
+		b.Mapper.OrePatches[oreName][:minIndex],
+		b.Mapper.OrePatches[oreName][minIndex+1:]...)
+
+	return b.findSharedResource(item, amount)
 }
 
+// returns the building name with current available level in mind
 func (b *bot) resolveBuildingName(curr string) string {
 	switch curr {
 	case "assembling-machine-%d":
@@ -105,6 +123,7 @@ func (b *bot) resolveBuildingName(curr string) string {
 	return curr
 }
 
+// Generates the blueprint for a factory at position `pos`.
 func (b *bot) genFactory(pos position, itemName string, asmCount int, bp blueprint) []building {
 	out := make([]building, asmCount*len(bp.Buildings))
 
@@ -128,6 +147,9 @@ func (b *bot) genFactory(pos position, itemName string, asmCount int, bp bluepri
 	return out
 }
 
+// Creates a new factory that manufactures `ps` of `itemStr` per second.
+// Returns the position, where the factory was built.
+// It automatically builds it's dependencies.
 func (b *bot) newFactory(itemStr string, ps float64) (position, error) {
 	bp := noFluidBp
 	item, exists := recipes[itemStr]
@@ -135,9 +157,9 @@ func (b *bot) newFactory(itemStr string, ps float64) (position, error) {
 		return position{}, errors.New("unknown item " + itemStr)
 	}
 
-	resources := map[string]position{}
-
 	asmCount := int(math.Ceil(ps * item.CraftTime)) // count of assemblers needed
+
+	// allocate space
 	space := box{Tl: position{0, 0}, Br: position{bp.Dims.X, bp.Dims.Y * float64(asmCount)}}
 	b.Mapper.findSpace(&space)
 	_, err := b.Mapper.alloc(space)
@@ -145,6 +167,8 @@ func (b *bot) newFactory(itemStr string, ps float64) (position, error) {
 		return position{}, errors.New("could not find space to allocate")
 	}
 
+	// resolve deps
+	resources := map[string]position{} // map of places where a path needs to be built from
 	for i, d := range item.Deps {
 		if d.Name != "iron-plate" && d.Name != "copper-plate" {
 			fmt.Printf("%s needs to be built.\n", d.Name)
@@ -181,15 +205,18 @@ func (b *bot) newFactory(itemStr string, ps float64) (position, error) {
 
 	buildings := b.genFactory(space.Tl, itemStr, asmCount, bp)
 
-	i := 0
-	for key := range resources {
-		fmt.Printf("building path for resource %s from %v to %v\n", key, resources[key], position{space.Tl.X + float64(i), space.Tl.Y - 1})
+	// generate and build paths for all resources
+	for i:=0; key := range resources; i++ {
+		fmt.Printf(
+			"building path for resource %s from %v to %v\n",
+			key, resources[key],
+			position{space.Tl.X + float64(i), space.Tl.Y - 1})
+
 		path := b.Mapper.findBeltPath(resources[key], position{space.Tl.X + float64(i), space.Tl.Y - 2})
 		b.Mapper.allocBelt(path)
 		pathBp := tileArrayToBP(path)
 		b.build(pathBp)
 		b.waitForTaskDone()
-		i++
 	}
 
 	fmt.Println("building factory")
@@ -199,6 +226,7 @@ func (b *bot) newFactory(itemStr string, ps float64) (position, error) {
 	return position{space.Br.X, space.Br.Y + 2}, nil
 }
 
+// TODO: very slow
 func (b *bot) shouldBuildMiner(mPos position) bool {
 	for _, tiles := range b.Mapper.Resources {
 		for _, tile := range tiles {
@@ -214,6 +242,9 @@ func (b *bot) shouldBuildMiner(mPos position) bool {
 	return false
 }
 
+// Build new miners mining `patch`.
+// Returns position where they are built and how much
+// they mine per second.
 func (b *bot) newMiners(patch orePatch) (position, float64) {
 	wCount := int(math.Abs(math.Ceil((patch.Dims.Tl.X - patch.Dims.Br.X) / minerBp.Dims.X)))
 	hCount := int(math.Abs(math.Ceil((patch.Dims.Tl.Y - patch.Dims.Br.Y) / minerBp.Dims.Y)))
@@ -304,34 +335,31 @@ func (b *bot) newSmelters(maxInput float64) (position, error) {
 	b.clearAll(space)
 	b.waitForTaskDone()
 
-	out := make([]building, len(smeltingHeaderBp.Buildings)+furnaceCount*len(smeltingBp.Buildings)+len(smeltingFooterBp.Buildings))
+	out := make([]building, 0,
+		len(smeltingHeaderBp.Buildings) + 
+		furnaceCount*len(smeltingBp.Buildings) +
+		len(smeltingFooterBp.Buildings))
 
 	bCount := 0
-	for _, building := range smeltingHeaderBp.Buildings {
-		building.Pos.X += space.Tl.X
-		building.Pos.Y += space.Tl.Y
-		out[bCount] = building
-		out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
-		bCount++
-	}
+	out = append(out, b.repeatBp(
+		smeltingHeaderBp.Buildings,
+		1, space.Tl.X, space.Tl.Y))
 
 	for i := 0; i < furnaceCount; i++ {
-		for _, building := range smeltingBp.Buildings {
-			out[bCount] = building
-			out[bCount].Pos.X += space.Tl.X + float64(i)*smeltingBp.Dims.X + smeltingHeaderBp.Dims.X
-			out[bCount].Pos.Y += space.Tl.Y
-			out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
-			bCount++
-		}
+		out = append(out, b.repeatBp(
+			smeltingBp.Buildings,
+			1,
+			space.Tl.X + float64(i)*smeltingBp.Dims.X +
+				smeltingHeaderBp.Dims.X,
+				space.Tl.Y))
 	}
 
-	for _, building := range smeltingFooterBp.Buildings {
-		building.Pos.X += space.Tl.X + smeltingHeaderBp.Dims.X + smeltingBp.Dims.X*float64(furnaceCount)
-		building.Pos.Y += space.Tl.Y
-		out[bCount] = building
-		out[bCount].Name = b.resolveBuildingName(out[bCount].Name)
-		bCount++
-	}
+	out = append(out, b.repeatBp(
+		smeltingFooterBp.Buildings,
+		1,
+		space.Tl.X + smeltingBp.Dims.X +
+			smeltingHeaderBp.Dims.X,
+			space.Tl.Y))
 
 	b.build(out)
 	b.waitForTaskDone()

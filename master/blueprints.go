@@ -5,6 +5,19 @@ type blueprint struct {
 	Buildings []building
 }
 
+func (b *bot) repeatBp(buildings []building, int c, xOff, yOff float64) []building {
+	out := make([]building, 0, len(buildings))
+
+	for i, building := range buildings {
+		building.Pos.X += xOff
+		building.Pos.Y += yOff
+		building.Name = b.resolveBuildingName(building.Name)
+		out = append(out, building)
+	}
+
+	return out
+}
+
 var noFluidBp = blueprint{
 	position{8, 3},
 	[]building{
